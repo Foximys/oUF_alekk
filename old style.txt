@@ -1,0 +1,342 @@
+local function Style(self, unit)
+
+	local _, class = UnitClass('player')
+	self.disallowVehicleSwap = true
+		
+	if unit == "targettarget" or unit == "focus" or unit == "focustarget" then
+		self.Health:SetHeight(16.5)
+		self.Power:SetHeight(0)
+	elseif unit == "player" or unit == "target" then
+		self.Health:SetHeight(27)
+		self.Power:SetHeight(10.5)
+	else
+		self.Health:SetHeight(23)
+		self.Power:SetHeight(6)
+	end
+	
+	self.Name = setFontString(self.Health, fontn, 13) --Name
+		if unit == "focus" or unit == "focustarget"  then
+			self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
+			self.Name:SetWidth(80)
+		elseif unit == "pet" then
+			self.Name:SetPoint("TOPLEFT", self.Health, "TOPLEFT",2,-2)
+			self.Name:SetWidth(80)
+			
+		elseif unit == "player" then
+			self.Name:Hide()
+		elseif unit == "target" then
+			self.Name:SetPoint("RIGHT", self.Health, "RIGHT",-3,0)
+			self.Name:SetWidth(170)
+			self.Name:SetHeight(20)
+			self.Name:SetFont(fontn, 13)
+			self.Name:SetJustifyH('RIGHT')
+		elseif unit == "targettarget" then
+			self.Name:SetPoint("RIGHT", self.Health, "RIGHT",-3,0)
+			self.Name:SetWidth(80)
+			self.Name:SetJustifyH('RIGHT')
+		elseif not unit then
+			self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
+			self.Name:SetWidth(80)
+		end
+		self.Name:SetHeight(20)
+		
+	
+	
+	
+	if(unit=='player') then
+		BuffFrame:Hide()
+		TemporaryEnchantFrame:Hide()
+		
+		self.Debuffs = CreateFrame("Frame", nil, self)
+		self.Debuffs:SetHeight(41*4)
+		self.Debuffs:SetWidth(41*4)
+		self.Debuffs.size = 40
+		self.Debuffs.spacing = 2
+		
+		self.Debuffs.initialAnchor = "BOTTOMLEFT"
+		self.Debuffs["growth-x"] = "RIGHT"
+		self.Debuffs["growth-y"] = "UP"
+		self.Debuffs:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 7.5)
+	
+		self.Buffs = CreateFrame("Frame", nil, self)
+		self.Buffs:SetHeight(320)
+		self.Buffs:SetWidth(42 * 12)
+		self.Buffs.size = 35
+		self.Buffs.spacing = 2
+		
+		self.Buffs:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -5, -35)
+		self.Buffs.initialAnchor = "TOPRIGHT"
+		self.Buffs["growth-x"] = "LEFT"
+		self.Buffs["growth-y"] = "DOWN"
+		self.Buffs.filter = true
+
+
+			
+	elseif(unit=='target') then 
+		self.Auras = CreateFrame('StatusBar', nil, self)
+		self.Auras:SetHeight(120)
+		self.Auras:SetWidth(280)
+		self.Auras:SetPoint('BOTTOMLEFT', self, 'TOPLEFT', 1, 2)
+		self.Auras['growth-x'] = 'RIGHT'
+		self.Auras['growth-y'] = 'UP' 
+		self.Auras.initialAnchor = 'BOTTOMLEFT'
+		self.Auras.spacing = 2.5
+		self.Auras.size = 28
+		self.Auras.gap = true
+		self.Auras.numBuffs = 18 
+		self.Auras.numDebuffs = 18 
+		--self.sortAuras = {}
+		--self.sortAuras.selfFirst = true
+	elseif(unit=='pet') then 
+		self.Auras = CreateFrame('StatusBar', nil, self)
+		self.Auras:SetHeight(100)
+		self.Auras:SetWidth(130)
+		self.Auras:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 1, -2)
+		self.Auras['growth-x'] = 'RIGHT'
+		self.Auras['growth-y'] = 'DOWN'
+		self.Auras.initialAnchor = 'TOPLEFT' 
+		self.Auras.spacing = 3
+		self.Auras.size = 28
+		self.Auras.gap = true
+		self.Auras.numBuffs = 8
+		self.Auras.numDebuffs = 8
+	end
+	
+	if (self:GetParent():GetName():match'oUF_Party' or unit == 'player') then 
+		self.Leader = self.Health:CreateTexture(nil, 'OVERLAY')
+		self.Leader:SetHeight(17)
+		self.Leader:SetWidth(17)
+		self.Leader:SetPoint('TOPLEFT', -2, 12)
+		self.Leader:SetTexture('Interface\\GroupFrame\\UI-Group-LeaderIcon')
+	end
+	
+	if(unit == 'player') then
+		self.Combat = self.Health:CreateTexture(nil, 'OVERLAY')
+		self.Combat:SetHeight(17)
+		self.Combat:SetWidth(17)
+		self.Combat:SetPoint('TOPRIGHT', 2, 12)
+		self.Combat:SetTexture('Interface\\CharacterFrame\\UI-StateIcon')
+		self.Combat:SetTexCoord(0.58, 0.90, 0.08, 0.41)
+	end
+
+--CastBars
+	if(unit == 'player' and tCastbar) then
+		local colorcb
+		local _,classcb = UnitClass(unit)
+		colorcb = oUF.colors.class[classcb]
+
+		self.Castbar = CreateFrame('StatusBar', nil, self)
+		self.Castbar:SetPoint('TOP', UIParentr, 'CENTER', 0, -93)
+		self.Castbar:SetStatusBarTexture(texturebar)
+		self.Castbar:SetStatusBarColor(colorcb[1], colorcb[2], colorcb[3])
+		self.Castbar:SetBackdrop(backdrophp)
+		self.Castbar:SetBackdropColor(colorcb[1]/3, colorcb[2]/3, colorcb[3]/3)
+		self.Castbar:SetHeight(19)
+		self.Castbar:SetWidth(322)
+		
+		self.Castbar.Spark = self.Castbar:CreateTexture(nil,'OVERLAY')
+		self.Castbar.Spark:SetBlendMode("ADD")
+		self.Castbar.Spark:SetHeight(55)
+		self.Castbar.Spark:SetWidth(27)
+		self.Castbar.Spark:SetVertexColor(colorcb[1], colorcb[2], colorcb[3])
+		
+		self.Castbar.Text = setFontString(self.Castbar, fontn, 13)
+		self.Castbar.Text:SetPoint('LEFT', self.Castbar, 2, 0)
+
+		self.Castbar.Time = setFontString(self.Castbar, fontn, 13)
+		self.Castbar.Time:SetPoint('RIGHT', self.Castbar, -2, 0)
+		self.Castbar.CustomTimeText = OverrideCastbarTime
+		self.Castbar.CustomDelayText = OverrideCastbarDelay
+		
+		self.Castbar2 = CreateFrame('StatusBar', nil, self.Castbar)
+		self.Castbar2:SetPoint('BOTTOMRIGHT', self.Castbar, 'BOTTOMRIGHT', 4, -4)
+		self.Castbar2:SetPoint('TOPLEFT', self.Castbar, 'TOPLEFT', -4, 4)
+		self.Castbar2:SetBackdrop(backdrop)
+		self.Castbar2:SetBackdropColor(0,0,0,1)
+		self.Castbar2:SetHeight(27)
+		self.Castbar2:SetFrameLevel(0)
+		
+		self.Castbar.SafeZone = self.Castbar:CreateTexture(nil,'BACKGROUND')
+		self.Castbar.SafeZone:SetPoint('TOPRIGHT')
+		self.Castbar.SafeZone:SetPoint('BOTTOMRIGHT')
+		self.Castbar.SafeZone:SetHeight(20)
+		self.Castbar.SafeZone:SetTexture(texturebar)
+		self.Castbar.SafeZone:SetVertexColor(1,1,.01,0.5)
+		--]]
+	end
+	if(unit == 'target' and tCastbar) then
+		self.Castbar = CreateFrame('StatusBar', nil, self)
+		self.Castbar:SetPoint('TOP', UIParentr, 'CENTER', 0, -73)
+		self.Castbar:SetStatusBarTexture(texturebar)
+		self.Castbar:SetStatusBarColor(.81,.81,.25)
+		self.Castbar:SetBackdrop(backdrophp)
+		self.Castbar:SetBackdropColor(.81/3,.81/3,.25/3)
+		self.Castbar:SetHeight(11)
+		self.Castbar:SetWidth(322)
+		
+		self.Castbar.Text = setFontString(self.Castbar, fontn, 13)
+		self.Castbar.Text:SetPoint('LEFT', self.Castbar, 2, 1)
+
+		self.Castbar.Time = setFontString(self.Castbar, fontn, 13)
+		self.Castbar.Time:SetPoint('RIGHT', self.Castbar, -2, 1)
+		self.Castbar.CustomTimeText = OverrideCastbarTime
+		
+		self.Castbar2 = CreateFrame('StatusBar', nil, self.Castbar)
+		self.Castbar2:SetPoint('BOTTOMRIGHT', self.Castbar, 'BOTTOMRIGHT', 4, -4)
+		self.Castbar2:SetPoint('TOPLEFT', self.Castbar, 'TOPLEFT', -4, 4)
+		self.Castbar2:SetBackdrop(backdrop)
+		self.Castbar2:SetBackdropColor(0,0,0,1)
+		self.Castbar2:SetHeight(21)
+		self.Castbar2:SetFrameLevel(0)
+		
+		self.Castbar.Spark = self.Castbar:CreateTexture(nil,'OVERLAY')
+		self.Castbar.Spark:SetBlendMode("Add")
+		self.Castbar.Spark:SetHeight(35)
+		self.Castbar.Spark:SetWidth(25)
+		self.Castbar.Spark:SetVertexColor(.69,.31,.31)
+	end
+	if(unit == 'focus'  and tCastbar) then
+		self.Castbar = CreateFrame('StatusBar', nil, self)
+		self.Castbar:SetPoint('TOP', UIParentr, 'CENTER', 0, -123)
+		self.Castbar:SetStatusBarTexture(texturebar)
+		self.Castbar:SetStatusBarColor(.79,.41,.31)
+		self.Castbar:SetBackdrop(backdrophp)
+		self.Castbar:SetBackdropColor(.79/3,.41/3,.31/3)
+		self.Castbar:SetHeight(11)
+		self.Castbar:SetWidth(280)
+		
+		self.Castbar.Text = setFontString(self.Castbar, fontn, 12)
+		self.Castbar.Text:SetPoint('LEFT', self.Castbar, 2, 1)
+
+		self.Castbar.Time = setFontString(self.Castbar, fontn, 12)
+		self.Castbar.Time:SetPoint('RIGHT', self.Castbar, -2, 1)
+		self.Castbar.CustomTimeText = OverrideCastbarTime
+		
+		self.Castbar2 = CreateFrame('StatusBar', nil, self.Castbar)
+		self.Castbar2:SetPoint('BOTTOMRIGHT', self.Castbar, 'BOTTOMRIGHT', 4, -4)
+		self.Castbar2:SetPoint('TOPLEFT', self.Castbar, 'TOPLEFT', -4, 4)
+		self.Castbar2:SetBackdrop(backdrop)
+		self.Castbar2:SetBackdropColor(0,0,0,1)
+		self.Castbar2:SetHeight(21)
+		self.Castbar2:SetFrameLevel(0)
+		
+		self.Castbar.Spark = self.Castbar:CreateTexture(nil,'OVERLAY')
+		self.Castbar.Spark:SetBlendMode("Add")
+		self.Castbar.Spark:SetHeight(35)
+		self.Castbar.Spark:SetWidth(25)
+		self.Castbar.Spark:SetVertexColor(.69,.31,.31)
+	end
+--[[Swing
+	if(IsAddOnLoaded('oUF_Swing')) and (unit == 'player') then
+			local colorcb
+			local _,classcb = UnitClass(unit)
+			colorcb = oUF.colors.class[classcb]
+			
+			self.Swing = CreateFrame('StatusBar', nil, self)
+			self.Swing:SetPoint('TOPLEFT', self.Castbar, 'TOPLEFT', 0, 13)
+			self.Swing:SetPoint('BOTTOMRIGHT', self.Castbar, 'TOPRIGHT', 0, 5)
+			self.Swing:SetStatusBarTexture(texturebar)
+			self.Swing:SetStatusBarColor(colorcb[1], colorcb[2], colorcb[3])
+			self.Swing:SetBackdrop(backdrophp)
+			self.Swing:SetBackdropColor(colorcb[1]/2.5, colorcb[2]/2.5, colorcb[3]/2.5)
+
+			self.Swing.Text = setFontString(self.Swing, fontn, 12)
+			self.Swing.Text:SetPoint('CENTER', 0, 1)
+			self.Swing.Text:SetTextColor(.84,.75,.65) 
+			
+			self.Swing.bg = self.Swing:CreateTexture(nil, 'BORDER')
+			self.Swing.bg:SetAllPoints(self.Swing)
+			self.Swing.bg:SetTexture(texturebar)
+			self.Swing.bg:SetVertexColor(.15,.15,.15)
+		end
+--]]
+--ComboPoints	
+	if(unit == 'target') then
+		self.CPoints = {}
+		--self.CPoints.unit = 'player'
+		self.CPoints[1] = self.Power:CreateTexture(nil, 'OVERLAY')
+		self.CPoints[1]:SetHeight(17)
+		self.CPoints[1]:SetWidth(17)
+		self.CPoints[1]:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, 0)
+		self.CPoints[1]:SetTexture(bubbleTex)
+		self.CPoints[1]:SetVertexColor(.33,.63,.33)
+
+		self.CPoints[2] = self.Power:CreateTexture(nil, 'OVERLAY')
+		self.CPoints[2]:SetHeight(17)
+		self.CPoints[2]:SetWidth(17)
+		self.CPoints[2]:SetPoint('LEFT', self.CPoints[1], 'RIGHT', 1)
+		self.CPoints[2]:SetTexture(bubbleTex)
+		self.CPoints[2]:SetVertexColor(.33,.63,.33)
+
+		self.CPoints[3] = self.Power:CreateTexture(nil, 'OVERLAY')
+		self.CPoints[3]:SetHeight(17)
+		self.CPoints[3]:SetWidth(17)
+		self.CPoints[3]:SetPoint('LEFT', self.CPoints[2], 'RIGHT', 1)
+		self.CPoints[3]:SetTexture(bubbleTex)
+		self.CPoints[3]:SetVertexColor(.67,.67,.33)
+
+		self.CPoints[4] = self.Power:CreateTexture(nil, 'OVERLAY')
+		self.CPoints[4]:SetHeight(17)
+		self.CPoints[4]:SetWidth(17)
+		self.CPoints[4]:SetPoint('LEFT', self.CPoints[3], 'RIGHT', 1)
+		self.CPoints[4]:SetTexture(bubbleTex)
+		self.CPoints[4]:SetVertexColor(.67,.67,.33)
+
+		self.CPoints[5] = self.Power:CreateTexture(nil, 'OVERLAY')
+		self.CPoints[5]:SetHeight(17)
+		self.CPoints[5]:SetWidth(17)
+		self.CPoints[5]:SetPoint('LEFT', self.CPoints[4], 'RIGHT', 1)
+		self.CPoints[5]:SetTexture(bubbleTex)
+		self.CPoints[5]:SetVertexColor(.69,.31,.31)	
+	end 
+--Runes
+	if(class == 'DEATHKNIGHT' and unit == 'player' and tRunebar) then
+		self.RuneBar = {}
+		for i = 1, 6 do
+			self.RuneBar[i] = CreateFrame('StatusBar', nil, self)
+			if(i == 1) then
+				self.RuneBar[i]:SetPoint('BOTTOMRIGHT', self, 'BOTTOMLEFT', -4, 4)
+			else
+				self.RuneBar[i]:SetPoint('TOPRIGHT', self.RuneBar[i-1], 'TOPLEFT', -7, 0)
+			end
+			self.RuneBar[i]:SetStatusBarTexture(texturebar)--(trunebar)
+			--self.RuneBar[i]:SetStatusBarColor(unpack(runeloadcolors[i]))
+			self.RuneBar[i]:SetHeight(39)
+			self.RuneBar[i]:SetWidth(6)--(275/6 - 1.25)
+			self.RuneBar[i]:SetBackdrop(backdrophp)
+			self.RuneBar[i]:SetBackdropColor(.75,.75,.75)
+			self.RuneBar[i]:SetMinMaxValues(0, 1)
+			self.RuneBar[i]:SetOrientation("Vertical")
+			self.RuneBar[i]:SetID(i)
+			local runetype = GetRuneType(i)
+			if(runetype) then
+				self.RuneBar[i]:SetStatusBarColor(unpack(colors.runes[runetype]))
+				
+			end
+
+			self.RuneBar[i].bg = CreateFrame('StatusBar', nil, self.RuneBar[i])
+			self.RuneBar[i].bg:SetPoint('BOTTOMRIGHT', self.RuneBar[i], 'BOTTOMRIGHT', 4, -4)
+			self.RuneBar[i].bg:SetPoint('TOPLEFT', self.RuneBar[i], 'TOPLEFT', -4, 4)
+			self.RuneBar[i].bg:SetBackdrop(backdrop)
+			self.RuneBar[i].bg:SetBackdropColor(0,0,0,1)
+			self.RuneBar[i].bg:SetHeight(27)
+			self.RuneBar[i].bg:SetFrameLevel(0)
+			
+		end
+
+		RuneFrame:Hide()
+
+		self:RegisterEvent('RUNE_TYPE_UPDATE', UpdateRuneType)
+		self:RegisterEvent('RUNE_REGEN_UPDATE', UpdateRuneType)
+		self:RegisterEvent('RUNE_POWER_UPDATE', UpdateRunePower)
+	end
+
+	self.PostCreateAuraIcon = PostCreateAuraIcon
+	self.PostUpdateAuraIcon = PostUpdateAuraIcon
+	self.UNIT_NAME_UPDATE = OverrideUpdateName
+	self.PostUpdateHealth = PostUpdateHealth
+	self.PostUpdatePower = PostUpdatePower
+	self.PostCreateEnchantIcon = PostCreateAuraIcon
+	self.PostUpdateEnchantIcons = CreateEnchantTimer
+	return self
+end

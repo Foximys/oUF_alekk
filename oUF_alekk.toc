@@ -1,0 +1,11 @@
+## Interface: 30300
+## Author: alekk
+## Version: 001
+## Title: oUF alekk
+## Notes: oUF layout
+## RequiredDeps: oUF
+## OptionalDeps: oUF_Smooth, oUF_AuraSort, oUF_WeaponEnchant
+
+template.xml
+oUF_alekk.lua
+
