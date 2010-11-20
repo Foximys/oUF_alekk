@@ -756,13 +756,38 @@ oUF:Factory(function(self) -- the new "where stuff goes method
 	oUF:Spawn("targettarget"):SetPoint("TOPRIGHT", oUF.units.target, "BOTTOMRIGHT", 0, -1)
 	oUF:Spawn("focus"):SetPoint("TOPLEFT", oUF.units.player, "BOTTOMLEFT", 0, -1)
 	oUF:Spawn("focustarget"):SetPoint("TOPLEFT", oUF.units.focus, "TOPRIGHT", 5, 0)
---[[
-	local maintank = oUF:Spawn('header', 'oUF_MainTank')
-	maintank:SetManyAttributes('showRaid', true, 'groupFilter', 'MAINTANK', 'yOffset', -3)
-	maintank:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
-	maintank:SetAttribute("template", "oUF_MTT")
-	maintank:Show()
---]]
+	
+ -- Main Tank Frames
+self:SetActiveStyle('alekk-MT')
+
+local maintank = self:SpawnHeader("oUF_MainTank", nil, "raid, party, solo",
+	"showRaid", true,
+	"yOffset", -3,
+	"point", "LEFT",
+	"columnAnchorPoint", "TOP",
+	"sortMethod", "NAME",
+	"groupFilter", "MAINTANK",
+	"oUF-initialConfigFunction", [[
+		self:SetWidth(%d)
+		self:SetHeight(%d)
+		self:SetScale(1))
+		]]
+	)
+maintank:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
+
+local mtt = self:SpawnHeader(
+	nil, nil, 'raid,party',
+	'showRaid', true,
+	'groupFilter', 'MAINTANK',
+	'oUF-initialConfigFunction', [[
+		self:SetHeight(22)
+		self:SetWidth(220)
+		self:SetAttribute('unitsuffix', 'target')
+		]]
+	)
+mtt:SetPoint("BOTTOMLEFT", maintank, "BOTTOMRIGHT")
+
+ 
 	if tParty then
 		local party = self:SpawnHeader(
 			nil, nil, 'party', 'showParty', true, 'yOffset', -3,
