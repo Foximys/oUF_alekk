@@ -579,14 +579,14 @@ local UnitSpecific = {
 		self.Power:SetHeight(0)
 		
 		self.Name = setFontString(self.Health, fontn, 13)
-		self.Name:SetPoint("LEFT", self.Health, "LEFT",-3,0)
+		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
 		self.Name:SetWidth(80)
 		self.Name:SetHeight(20)
 		self.Name:SetJustifyH('LEFT')
 		self:Tag(self.Name, "[name]")
 		
 		self.Health.value = setFontString(self.Health, fontn, 13)
-		self.Health.value:SetPoint("RIGHT", self.Health, "RIGHT", 2, 0)
+		self.Health.value:SetPoint("RIGHT", self.Health, "RIGHT", -3, 0)
 		self:Tag(self.Health.value, "[perhp]%")
 		
 		if(tCastbar) then
@@ -635,8 +635,12 @@ local UnitSpecific = {
 		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
 		self.Name:SetWidth(80)
 		self.Name:SetHeight(20)
-		self.Name:SetJustifyH('RIGHT')
+		self.Name:SetJustifyH('LEFT')
 		self:Tag(self.Name, "[name]")
+		
+		self.Health.value = setFontString(self.Health, fontn, 13)
+		self.Health.value:SetPoint("RIGHT", self.Health, "RIGHT", -3, 0)
+		self:Tag(self.Health.value, "[perhp]%")
 	end,
 	
 	pet = function(self)
@@ -757,40 +761,41 @@ oUF:Factory(function(self) -- the new "where stuff goes method
 	oUF:Spawn("focus"):SetPoint("TOPLEFT", oUF.units.player, "BOTTOMLEFT", 0, -1)
 	oUF:Spawn("focustarget"):SetPoint("TOPLEFT", oUF.units.focus, "TOPRIGHT", 5, 0)
 	
- -- Main Tank Frames
-self:SetActiveStyle('alekk-MT')
-
-local maintank = self:SpawnHeader("oUF_MainTank", nil, "raid, party, solo",
-	"showRaid", true,
-	"yOffset", -3,
-	"point", "LEFT",
-	"columnAnchorPoint", "TOP",
-	"sortMethod", "NAME",
-	"groupFilter", "MAINTANK",
-	"oUF-initialConfigFunction", [[
-		self:SetWidth(%d)
-		self:SetHeight(%d)
-		self:SetScale(1))
-		]]
-	)
-maintank:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
-
-local mtt = self:SpawnHeader(
-	nil, nil, 'raid,party',
-	'showRaid', true,
-	'groupFilter', 'MAINTANK',
-	'oUF-initialConfigFunction', [[
-		self:SetHeight(22)
-		self:SetWidth(220)
-		self:SetAttribute('unitsuffix', 'target')
-		]]
-	)
-mtt:SetPoint("BOTTOMLEFT", maintank, "BOTTOMRIGHT")
-
- 
+	 -- Maintank Frames
+	local maintank = self:SpawnHeader("oUF_MainTank", nil, "raid, party, solo",
+		"showRaid", true,
+		"yOffset", -3,
+		"point", "LEFT",
+		"columnAnchorPoint", "TOP",
+		"sortMethod", "NAME",
+		"groupFilter", "MAINTANK",
+		"oUF-initialConfigFunction", [[
+			self:SetWidth(%d)
+			self:SetHeight(%d)
+			self:SetScale(1))
+			]]
+		)
+	maintank:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
+	-- Maintank Targets
+	local mtt = self:SpawnHeader(
+		nil, nil, 'raid,party',
+		'showRaid', true,
+		'groupFilter', 'MAINTANK',
+		'oUF-initialConfigFunction', [[
+			self:SetHeight(22)
+			self:SetWidth(220)
+			self:SetAttribute('unitsuffix', 'target')
+			]]
+		)
+	mtt:SetPoint("BOTTOMLEFT", maintank, "BOTTOMRIGHT")
+	-- party
 	if tParty then
 		local party = self:SpawnHeader(
-			nil, nil, 'party', 'showParty', true, 'yOffset', -3,
+			nil, nil, 
+			'party',
+			'showSolo', true, -- for the sake of debug
+			'showParty', true,
+			'yOffset', -3,
 			'oUF-initialConfigFunction', [[
 				-- unit {raid, party}{pet, target}
 				local unit = ...
@@ -798,26 +803,6 @@ mtt:SetPoint("BOTTOMLEFT", maintank, "BOTTOMRIGHT")
 			]]
 		)
 		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 180)
-
-		local partyToggle = CreateFrame('Frame')
-
-		partyToggle:RegisterEvent('PLAYER_LOGIN')
-		partyToggle:RegisterEvent('RAID_ROSTER_UPDATE')
-		partyToggle:RegisterEvent('PARTY_LEADER_CHANGED')
-		partyToggle:RegisterEvent('PARTY_MEMBERS_CHANGED')
-
-		partyToggle:SetScript('OnEvent', function(self)
-			if(InCombatLockdown()) then
-				self:RegisterEvent('PLAYER_REGEN_ENABLED')
-			else
-				self:UnregisterEvent('PLAYER_REGEN_ENABLED')
-				if(GetNumRaidMembers() > 1) then
-					party:Hide()
-				else
-					party:Show()
-				end
-			end
-		end)
 	end
 
 end)
