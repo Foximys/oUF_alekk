@@ -648,8 +648,8 @@ local UnitSpecific = {
 		self:SetHeight(38)
 		self:SetScale(0.85)
 		
-		self.Power.colorHappiness = true
-	
+		self.Health:SetHeight(22.5)
+		
 		self.Auras = CreateFrame('StatusBar', nil, self)
 		self.Auras:SetHeight(100)
 		self.Auras:SetWidth(130)
@@ -664,11 +664,15 @@ local UnitSpecific = {
 		self.Auras.numDebuffs = 8
 		
 		self.Name = setFontString(self.Health, fontn, 13)
-		self.Name:SetPoint("TOPLEFT", self.Health, "TOPLEFT",2,-2)
+		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
 		self.Name:SetWidth(80)
 		self.Name:SetHeight(20)
 		self.Name:SetJustifyH('RIGHT')
 		self:Tag(self.Name, "[name]")
+		
+		self.Health.value = setFontString(self.Health, fontn, 13)
+		self.Health.value:SetPoint("RIGHT", self.Health, "RIGHT", -3, 0)
+		self:Tag(self.Health.value, "[perhp]%")
 	end,
 
 }
@@ -718,6 +722,7 @@ local function Shared(self, unit)
 	self.Power:SetPoint("TOP", self.Health, "BOTTOM", 0, -1)
 	self.Power:SetBackdrop(backdrophp)
 	self.Power.colorPower = true
+	self.Power.colorHappiness = true
 	self.Power.frequentUpdates = true
 	
 	self.RaidIcon = self.Health:CreateTexture(nil, "OVERLAY")
