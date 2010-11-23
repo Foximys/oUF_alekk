@@ -103,7 +103,7 @@ oUF.Tags["alekk:tarhp"] = function(unit) -- yeah it needs to be different too ap
 	elseif(UnitIsGhost(unit)) then
 		return '|cffD7BEA5Ghost|r'
 	else
-		return format("%.1f%% | %s", (UnitHealth(unit)/UnitHealthMax(unit)*100),kilo(max))
+		return format("%.1f%% | %s", (UnitHealth(unit)/UnitHealthMax(unit)*100),kilo(UnitHealthMax(unit)))
 	end
 end
 
@@ -301,7 +301,7 @@ local UnitSpecific = {
 		
 		self:SetWidth(275)
 		self:SetHeight(47)
-		self:SetScale(0.85)
+		--self:SetScale(0.85)
 		
 		self.Health:SetHeight(27)
 		self.Power:SetHeight(10.5)
@@ -449,7 +449,7 @@ local UnitSpecific = {
 	target = function(self)
 		self:SetWidth(275)
 		self:SetHeight(47)
-		self:SetScale(0.85)
+		--self:SetScale(0.85)
 		
 		self.Health:SetHeight(27)
 		self.Power:SetHeight(10.5)
@@ -458,19 +458,20 @@ local UnitSpecific = {
 		self.Health.value:SetHeight(20)
 		self.Health.value:SetPoint("LEFT", 2, 0)
 		self.Health.value.frequentUpdates = true
-		self:Tag(self.Health.value, "[alekk:smarthp]")
+		self:Tag(self.Health.value, "[alekk:tarhp]")
 		
 		self.Power.value = setFontString(self.Power, fontn, 12)
-		self.Power.value:SetPoint("RIGHT", self.Power, "RIGHT", -3, 0)
+		self.Power.value:SetPoint("LEFT", self.Power, "LEFT", 2, 0)
 		self:Tag(self.Power.value, "[alekk:tarpp]")
 		
 		self.Info = setFontString(self.Power, fontn, 12)
-		self.Power.value:SetPoint("LEFT", self.Power, "LEFT", 2,0)
+		self.Info:SetPoint("RIGHT", self.Power, "RIGHT", -3, 0)
 		self:Tag(self.Info, "[difficulty][smartlevel] [raidcolor][smartclass] |r[race]")
 		
 		self.Name = setFontString(self.Health, fontn, 13)
 		self.Name:SetPoint("RIGHT", self.Health, "RIGHT",-3,0)
 		self.Name:SetWidth(170)
+		self.Name:SetHeight(20)
 		self.Name:SetJustifyH('RIGHT')
 		self:Tag(self.Name, "[name]")
 		
@@ -562,7 +563,7 @@ local UnitSpecific = {
 	targettarget = function(self)
 		self:SetWidth(135)
 		self:SetHeight(25)
-		self:SetScale(0.85)
+		--self:SetScale(0.85)
 		
 		self.Health:SetHeight(16.5)
 		self.Power:SetHeight(0)
@@ -570,6 +571,7 @@ local UnitSpecific = {
 		self.Name = setFontString(self.Health, fontn, 13)
 		self.Name:SetPoint("RIGHT", self.Health, "RIGHT",-3,0)
 		self.Name:SetWidth(80)
+		self.Name:SetHeight(20)
 		self.Name:SetJustifyH('RIGHT')
 		self:Tag(self.Name, "[name]")
 		
@@ -581,7 +583,7 @@ local UnitSpecific = {
 	focus = function(self)
 		self:SetWidth(135)
 		self:SetHeight(25)
-		self:SetScale(0.85)
+		--self:SetScale(0.85)
 		
 		self.Health:SetHeight(16.5)
 		self.Power:SetHeight(0)
@@ -634,7 +636,7 @@ local UnitSpecific = {
 	focustarget = function(self)
 		self:SetWidth(135)
 		self:SetHeight(25)
-		self:SetScale(0.85)
+		--self:SetScale(0.85)
 		
 		self.Health:SetHeight(16.5)
 		self.Power:SetHeight(0)
@@ -654,7 +656,7 @@ local UnitSpecific = {
 	pet = function(self)
 		self:SetWidth(125)
 		self:SetHeight(38)
-		self:SetScale(0.85)
+		--self:SetScale(0.85)
 		
 		self.Health:SetHeight(23)
 		self.Power:SetHeight(6)
@@ -676,7 +678,6 @@ local UnitSpecific = {
 		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
 		self.Name:SetWidth(80)
 		self.Name:SetHeight(20)
-		self.Name:SetJustifyH('RIGHT')
 		self:Tag(self.Name, "[name]")
 		
 		self.Health.value = setFontString(self.Health, fontn, 13)
@@ -697,7 +698,7 @@ local function Shared(self, unit)
 	self:SetBackdropColor(0,0,0,1)
 	self:SetWidth(125)
 	self:SetHeight(38)
-	self:SetScale(0.85)
+	--self:SetScale(0.85)
 	
 	if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
 		self:SetBackdropBorderColor(1,0.84,0,1)
@@ -741,9 +742,9 @@ local function Shared(self, unit)
 
 	self.PostCreateAuraIcon = PostCreateAuraIcon
 	self.PostUpdateAuraIcon = PostUpdateAuraIcon
-	self.PostUpdateName = OverrideUpdateName
-	self.PostUpdateHealth = PostUpdateHealth
-	self.PostUpdatePower = PostUpdatePower
+	--self.PostUpdateName = OverrideUpdateName
+	--self.PostUpdateHealth = PostUpdateHealth
+	--self.PostUpdatePower = PostUpdatePower
 	self.PostCreateEnchantIcon = PostCreateAuraIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 	
