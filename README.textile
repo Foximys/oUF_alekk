@@ -1,0 +1,9 @@
+h2. To Do
+
+* Border color on elite/rare/worldboss
+
+* aura icon skinning
+
+* main tank and target
+
+* party check
