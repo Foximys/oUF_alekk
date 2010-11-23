@@ -157,7 +157,7 @@ local CreateAuraTimer = function(self,elapsed)
 	end
 end
 
-local function PostCreateAuraIcon(self, button, icons, index, debuff)
+local PostCreateAura = function(element, button)
 	button.backdrop = CreateFrame("Frame", nil, button)
 	button.backdrop:SetPoint("TOPLEFT", button, "TOPLEFT", -3.5, 3)
 	button.backdrop:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 4, -3.5)
@@ -170,35 +170,57 @@ local function PostCreateAuraIcon(self, button, icons, index, debuff)
 	button.backdrop:SetBackdropBorderColor(0, 0, 0)
 
 	button.count:SetPoint("BOTTOMRIGHT", 3,-3)
-	button.count:SetJustifyH("RIGHT")
-	if self.unit == "player" then
-		button.count:SetFont(fontn, 17, "OUTLINE")
-	else
-		button.count:SetFont(fontn, 14, "OUTLINE")
-	end
+	button.count:SetJustifyH("RIGHT")	
+	button.count:SetFont(fontn, 17, "OUTLINE")
 	button.count:SetTextColor(0.8, 0.8, 0.8)
 
 	button.cd.noOCC = true
 	button.cd.noCooldownCount = true
-	icons.disableCooldown = true
+	button.disableCooldown = true
+	
+	button.icon:SetTexCoord(.07, .93, .07, .93)
 
 	button.overlay:SetTexture(textureborder)
 	button.overlay:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
 	button.overlay:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
-	button.overlay.Hide = function(self) end
+	button.overlay.Hide = function(self) self:SetVertexColor(0.50, 0.50, 0.50) end
 
 	button.remaining = setFontString(button, fontn, 12)
-		button.remaining:SetFont(fontn, 14, "OUTLINE")
-		if self.unit == "player" then
-			button.remaining:SetFont(fontn, 17, "OUTLINE")
-			button:SetScript("OnMouseUp", CancelAura)
-		end
-	if icons == self.Enchant then
-		button.remaining:SetFont(fontn, 15, "OUTLINE")
-		button.overlay:SetVertexColor(0.33, 0.59, 0.33)
-	end
 	button.remaining:SetPoint("CENTER", 1, -1)
+end
+
+local PostUpdateDebuff = function(element, unit, button, index)
+	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, button.filter)
+	if (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and self.unit == "target" then
+		if icon.debuff then
+			button.overlay:SetVertexColor(0.8, 0.2, 0.2)
+			button.icon:SetTexCoord(.07, .93, .07, .93)
+		else
+			button.overlay:SetVertexColor(0.2, 0.8, 0.2)
+			button.icon:SetTexCoord(.07, .93, .07, .93)
+		end
+	else
+		if UnitIsEnemy("player", unit) then
+			if button.debuff then
+				button.icon:SetDesaturated(true)
+				button.icon:SetTexCoord(.07, .93, .07, .93)
+			end
+		end
+		button.overlay:SetVertexColor(0.5, 0.5, 0.5)
+		button.icon:SetTexCoord(.07, .93, .07, .93)
+	end
+	
+	if duration and duration > 0 then
+		button.remaining:Show()
+	else
+		button.remaining:Hide()
+	end
+
+	button.duration = duration
+	button.timeLeft = expirationTime
+	button.first = true
+	button:SetScript("OnUpdate", CreateAuraTimer)
 end
 
 local CreateEnchantTimer = function(self, icons)
@@ -212,35 +234,6 @@ local CreateEnchantTimer = function(self, icons)
 		end
 		icon:SetScript("OnUpdate", CreateAuraTimer)
 	end
-end
-
-local function PostUpdateAuraIcon(self, icons, unit, icon, index, offset, filter, debuff)
-	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
-	if (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and self.unit == "target" then
-		if icon.debuff then
-			icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
-		else
-			icon.overlay:SetVertexColor(0.2, 0.8, 0.2)
-		end
-	else
-		if UnitIsEnemy("player", unit) then
-			if icon.debuff then
-				icon.icon:SetDesaturated(true)
-			end
-		end
-		icon.overlay:SetVertexColor(0.5, 0.5, 0.5)
-	end
-
-	if duration and duration > 0 then
-		icon.remaining:Show()
-	else
-		icon.remaining:Hide()
-	end
-
-	icon.duration = duration
-	icon.timeLeft = expirationTime
-	icon.first = true
-	icon:SetScript("OnUpdate", CreateAuraTimer)
 end
 
 local menu = function(self)
@@ -306,8 +299,8 @@ local UnitSpecific = {
 		self.Info:SetPoint("LEFT", self.Power, "LEFT", 2, 0.5)
 		self:Tag(self.Info, "[difficulty][smartlevel] [raidcolor][smartclass] |r[race]")
 		
-		BuffFrame:Hide()
-		TemporaryEnchantFrame:Hide()
+		--BuffFrame:Hide()
+		--TemporaryEnchantFrame:Hide()
 		
 		self.Debuffs = CreateFrame("Frame", nil, self)
 		self.Debuffs:SetHeight(41*4)
@@ -319,6 +312,7 @@ local UnitSpecific = {
 		self.Debuffs["growth-x"] = "RIGHT"
 		self.Debuffs["growth-y"] = "UP"
 		self.Debuffs:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 7.5)
+		self.Debuffs.PostCreateIcon = PostCreateAura
 	
 		self.Buffs = CreateFrame("Frame", nil, self)
 		self.Buffs:SetHeight(320)
@@ -331,6 +325,7 @@ local UnitSpecific = {
 		self.Buffs["growth-x"] = "LEFT"
 		self.Buffs["growth-y"] = "DOWN"
 		self.Buffs.filter = true
+		self.Buffs.PostCreateIcon = PostCreateAura
 		
 		self.Combat = self.Health:CreateTexture(nil, 'OVERLAY')
 		self.Combat:SetHeight(17)
@@ -461,6 +456,7 @@ local UnitSpecific = {
 		self.Auras.gap = true
 		self.Auras.numBuffs = 18 
 		self.Auras.numDebuffs = 18 
+		self.Auras.PostCreateIcon = PostCreateAura
 		--self.sortAuras = {}
 		--self.sortAuras.selfFirst = true
 		
@@ -647,6 +643,7 @@ local UnitSpecific = {
 		self.Auras.gap = true
 		self.Auras.numBuffs = 8
 		self.Auras.numDebuffs = 8
+		self.Auras.PostCreateIcon = PostCreateAura
 		
 		self.Name = setFontString(self.Health, fontn, 13)
 		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
@@ -669,20 +666,20 @@ local function Shared(self, unit)
 	self.menu = menu
 
 	self:SetBackdrop(backdrop)
-	--self:SetBackdropColor(0,0,0,1)
+	self:SetBackdropColor(0,0,0,1)
 	self:SetWidth(125)
 	self:SetHeight(38)
 	--self:SetScale(0.85)
-	--[[
+	
 	if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
 		self:SetBackdropBorderColor(1,0.84,0,1)
 	else
 		self:SetBackdropBorderColor(1,1,1,1)
 	end	
-	--]]	
+		
 	self.Health = CreateFrame("StatusBar", nil, self)
 	self.Health:SetStatusBarTexture(texturebar)
-	--self.Health:SetStatusBarColor(.31, .31, .31)
+	self.Health:SetStatusBarColor(.31, .31, .31)
 	self.Health:SetPoint("LEFT", 4.5,0)
 	self.Health:SetPoint("RIGHT", -4.5,0)
 	self.Health:SetPoint("TOP", 0,-4.5)
@@ -704,7 +701,7 @@ local function Shared(self, unit)
 	self.Power = CreateFrame("StatusBar", nil, self)
 	self.Power:SetHeight(9.5)
 	self.Power:SetStatusBarTexture(texturebar)
-	--self.Power:SetStatusBarColor(.25, .25, .35)
+	self.Power:SetStatusBarColor(.25, .25, .35)
 	
 	self.Power:SetPoint("LEFT", self.Health)
 	self.Power:SetPoint("RIGHT", self.Health)
@@ -725,8 +722,8 @@ local function Shared(self, unit)
 	self.RaidIcon:SetPoint("TOP", self, 0, 5)
 	self.RaidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 
-	self.PostCreateAuraIcon = PostCreateAuraIcon
-	self.PostUpdateAuraIcon = PostUpdateAuraIcon
+	--self.PostCreateAuraIcon = PostCreateAuraIcon
+	--self.PostUpdateAuraIcon = PostUpdateAuraIcon
 	self.PostCreateEnchantIcon = PostCreateAuraIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 	
