@@ -85,23 +85,23 @@ end
 -- New tagging system
 oUF.Tags["alekk:smarthp"] = function(unit) -- gives Dead Ghost or HP | max HP | percentage HP
 	if(not UnitIsConnected(unit)) then
-		return '|cffD7BEA5Offline|r'
+		return 'Offline'
 	elseif(UnitIsDead(unit)) then
-		return '|cffD7BEA5Dead|r'
+		return 'Dead'
 	elseif(UnitIsGhost(unit)) then
-		return '|cffD7BEA5Ghost|r'
+		return 'Ghost'
 	else
-		return format("%d | %d | %d|cffffffff%%",UnitHealth(unit), UnitHealthMax(unit) ,floor(UnitHealth(unit)/UnitHealthMax(unit)*100))
+		return format("%d | %d | %d%%",UnitHealth(unit), UnitHealthMax(unit) ,floor(UnitHealth(unit)/UnitHealthMax(unit)*100))
 	end
 end
 
 oUF.Tags["alekk:tarhp"] = function(unit) -- yeah it needs to be different too apparently
 	if(not UnitIsConnected(unit)) then
-		return '|cffD7BEA5Offline|r'
+		return 'Offline'
 	elseif(UnitIsDead(unit)) then
-		return '|cffD7BEA5Dead|r'
+		return 'Dead'
 	elseif(UnitIsGhost(unit)) then
-		return '|cffD7BEA5Ghost|r'
+		return 'Ghost'
 	else
 		return format("%.1f%% | %s", (UnitHealth(unit)/UnitHealthMax(unit)*100),kilo(UnitHealthMax(unit)))
 	end
@@ -109,30 +109,6 @@ end
 
 oUF.Tags["alekk:tarpp"] = function(unit) -- gives 4.5k | 4.5k
 	return UnitIsDeadOrGhost(unit) and "" or UnitPower(unit) <= 0 and "" or format("%s | %s", kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
-end
-
-local function PostUpdatePower(self, event, unit, bar, min, max)
-	local _, pType = UnitPowerType(unit)
-	local color = self.colors.power[pType] or {0.7,0.7,0.7} 
-	
-	bar:SetStatusBarColor(color[1], color[2], color[3]) 
-	bar:SetBackdropColor(color[1]/3, color[2]/3, color[3]/3,0.8)
-
-    if max == 0 or UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then  
-        bar:SetValue(0) 
-        if bar.value then
-            bar.value:SetText()
-        end
-    elseif bar.value then
-		if(unit=='player') then  
-			bar.value:SetText(min .. ' | ' .. max)
-		elseif(unit=="target") then
-			bar.value:SetText(kilo(min) .. ' | ' .. kilo(max))
-		else
-			bar.value:SetText()  
-		end
-	end
-	self:UNIT_NAME_UPDATE(event, unit)
 end
 
 local FormatTime = function(s)
@@ -309,7 +285,6 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetHeight(20)
 		self.Health.value:SetPoint("RIGHT", -3,0)
-		self.Health.value.frequentUpdates = true
 		self:Tag(self.Health.value, "[alekk:smarthp]")
 		
 		self.Power.value = setFontString(self.Power, fontn, 12)
@@ -331,8 +306,8 @@ local UnitSpecific = {
 		self.Info:SetPoint("LEFT", self.Power, "LEFT", 2, 0.5)
 		self:Tag(self.Info, "[difficulty][smartlevel] [raidcolor][smartclass] |r[race]")
 		
-		--BuffFrame:Hide()
-		--TemporaryEnchantFrame:Hide()
+		BuffFrame:Hide()
+		TemporaryEnchantFrame:Hide()
 		
 		self.Debuffs = CreateFrame("Frame", nil, self)
 		self.Debuffs:SetHeight(41*4)
@@ -457,7 +432,6 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetHeight(20)
 		self.Health.value:SetPoint("LEFT", 2, 0)
-		self.Health.value.frequentUpdates = true
 		self:Tag(self.Health.value, "[alekk:tarhp]")
 		
 		self.Power.value = setFontString(self.Power, fontn, 12)
@@ -695,26 +669,26 @@ local function Shared(self, unit)
 	self.menu = menu
 
 	self:SetBackdrop(backdrop)
-	self:SetBackdropColor(0,0,0,1)
+	--self:SetBackdropColor(0,0,0,1)
 	self:SetWidth(125)
 	self:SetHeight(38)
 	--self:SetScale(0.85)
-	
+	--[[
 	if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
 		self:SetBackdropBorderColor(1,0.84,0,1)
 	else
 		self:SetBackdropBorderColor(1,1,1,1)
 	end	
-		
+	--]]	
 	self.Health = CreateFrame("StatusBar", nil, self)
 	self.Health:SetStatusBarTexture(texturebar)
-	self.Health:SetStatusBarColor(.31, .31, .31)
+	--self.Health:SetStatusBarColor(.31, .31, .31)
 	self.Health:SetPoint("LEFT", 4.5,0)
 	self.Health:SetPoint("RIGHT", -4.5,0)
 	self.Health:SetPoint("TOP", 0,-4.5)
-	self.Health:SetBackdrop(backdrophp)
+	--self.Health:SetBackdrop(backdrophp)
 	self.Health:SetHeight(23)
-	self.Health.Smooth = true
+	--self.Health.colorSmooth = true
 	self.Health.colorClass = true
 	self.Health.colorReaction = true
 	self.Health.colorHappiness = true
@@ -722,17 +696,28 @@ local function Shared(self, unit)
 	self.Health.colorDisconnected = true
 	self.Health.frequentUpdates = true
 
+	self.Health.bg = self.Health:CreateTexture(nil, "BACKGROUND")
+	self.Health.bg:SetAllPoints(self.Health)
+	self.Health.bg:SetTexture(texturebar)
+	self.Health.bg.multiplier = .30
+
 	self.Power = CreateFrame("StatusBar", nil, self)
 	self.Power:SetHeight(9.5)
 	self.Power:SetStatusBarTexture(texturebar)
-	self.Power:SetStatusBarColor(.25, .25, .35)
+	--self.Power:SetStatusBarColor(.25, .25, .35)
 	
 	self.Power:SetPoint("LEFT", self.Health)
 	self.Power:SetPoint("RIGHT", self.Health)
 	self.Power:SetPoint("TOP", self.Health, "BOTTOM", 0, -1)
-	self.Power:SetBackdrop(backdrophp)
+	--self.Power:SetBackdrop(backdrophp)
 	self.Power.colorPower = true
+	--self.Power.colorSmooth = true
 	self.Power.frequentUpdates = true
+
+	self.Power.bg = self.Power:CreateTexture(nil, "BACKGROUND")
+	self.Power.bg:SetAllPoints(self.Power)
+	self.Power.bg:SetTexture(texturebar)
+	self.Power.bg.multiplier = .30
 	
 	self.RaidIcon = self.Health:CreateTexture(nil, "OVERLAY")
 	self.RaidIcon:SetHeight(18)
@@ -742,9 +727,6 @@ local function Shared(self, unit)
 
 	self.PostCreateAuraIcon = PostCreateAuraIcon
 	self.PostUpdateAuraIcon = PostUpdateAuraIcon
-	--self.PostUpdateName = OverrideUpdateName
-	--self.PostUpdateHealth = PostUpdateHealth
-	--self.PostUpdatePower = PostUpdatePower
 	self.PostCreateEnchantIcon = PostCreateAuraIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 	
@@ -761,7 +743,6 @@ local function Shared(self, unit)
 	end
 
 end
-
 
 oUF:RegisterStyle('alekk', Shared)
 
