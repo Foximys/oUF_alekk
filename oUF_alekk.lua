@@ -84,17 +84,31 @@ end
 
 -- New tagging system
 oUF.Tags["alekk:smarthp"] = function(unit) -- gives Dead Ghost or HP | max HP | percentage HP
-	if(UnitIsDead(unit)) then
-		return 'Dead'
+	if(not UnitIsConnected(unit)) then
+		return '|cffD7BEA5Offline|r'
+	elseif(UnitIsDead(unit)) then
+		return '|cffD7BEA5Dead|r'
 	elseif(UnitIsGhost(unit)) then
-		return 'Ghost'
+		return '|cffD7BEA5Ghost|r'
 	else
-		return format("%s | %s | %s%%", UnitHealth(unit), UnitHealthMax(unit), (UnitHealth(unit)/UnitHealthMax(unit)*100))
+		return format("%d | %d | %d|cffffffff%%",UnitHealth(unit), UnitHealthMax(unit) ,floor(UnitHealth(unit)/UnitHealthMax(unit)*100))
+	end
+end
+
+oUF.Tags["alekk:tarhp"] = function(unit) -- yeah it needs to be different too apparently
+	if(not UnitIsConnected(unit)) then
+		return '|cffD7BEA5Offline|r'
+	elseif(UnitIsDead(unit)) then
+		return '|cffD7BEA5Dead|r'
+	elseif(UnitIsGhost(unit)) then
+		return '|cffD7BEA5Ghost|r'
+	else
+		return format("%.1f%% | %s", (UnitHealth(unit)/UnitHealthMax(unit)*100),kilo(max))
 	end
 end
 
 oUF.Tags["alekk:tarpp"] = function(unit) -- gives 4.5k | 4.5k
-	return UnitIsDeadOrGhost(unit) and "" or format("%s | %s", kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
+	return UnitIsDeadOrGhost(unit) and "" or UnitPower(unit) <= 0 and "" or format("%s | %s", kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
 end
 
 local function PostUpdatePower(self, event, unit, bar, min, max)
@@ -280,7 +294,6 @@ local function OverrideCastbarDelay(self, duration)
 		end	
 end
 
-
 -- New style functions.... Painful.
 local UnitSpecific = {
 
@@ -394,7 +407,7 @@ local UnitSpecific = {
 			self.Castbar.SafeZone:SetVertexColor(1,1,.01,0.5)
 		end
 		
-		if select(2, UnitClass("player") == 'DEATHKNIGHT' and unit == 'player' and tRunebar) then
+		if select(2, UnitClass("player") == 'DEATHKNIGHT' and tRunebar) then
 		self.RuneBar = {}
 		for i = 1, 6 do
 			self.RuneBar[i] = CreateFrame('StatusBar', nil, self)
@@ -430,9 +443,6 @@ local UnitSpecific = {
 
 		RuneFrame:Hide()
 
-		self:RegisterEvent('RUNE_TYPE_UPDATE', UpdateRuneType)
-		self:RegisterEvent('RUNE_REGEN_UPDATE', UpdateRuneType)
-		self:RegisterEvent('RUNE_POWER_UPDATE', UpdateRunePower)
 	end
 	end,
 	
@@ -516,8 +526,6 @@ local UnitSpecific = {
 		self.CPoints[5]:SetTexture(bubbleTex)
 		self.CPoints[5]:SetVertexColor(.69,.31,.31)	
 		
-		--CastBars
-	
 		if(tCastbar) then
 			self.Castbar = CreateFrame('StatusBar', nil, self)
 			self.Castbar:SetPoint('TOP', UIParentr, 'CENTER', 0, -73)
@@ -648,7 +656,8 @@ local UnitSpecific = {
 		self:SetHeight(38)
 		self:SetScale(0.85)
 		
-		self.Health:SetHeight(22.5)
+		self.Health:SetHeight(23)
+		self.Power:SetHeight(6)
 		
 		self.Auras = CreateFrame('StatusBar', nil, self)
 		self.Auras:SetHeight(100)
@@ -690,7 +699,7 @@ local function Shared(self, unit)
 	self:SetHeight(38)
 	self:SetScale(0.85)
 	
-	if (UnitClassification(unit)~= "normal") then
+	if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
 		self:SetBackdropBorderColor(1,0.84,0,1)
 	else
 		self:SetBackdropBorderColor(1,1,1,1)
@@ -706,8 +715,8 @@ local function Shared(self, unit)
 	self.Health:SetHeight(23)
 	self.Health.Smooth = true
 	self.Health.colorClass = true
-	self.Health.colorClassNPC = true
-	self.Health.colorClassPet = true
+	self.Health.colorReaction = true
+	self.Health.colorHappiness = true
 	self.Health.colorTapping = true
 	self.Health.colorDisconnected = true
 	self.Health.frequentUpdates = true
@@ -722,7 +731,6 @@ local function Shared(self, unit)
 	self.Power:SetPoint("TOP", self.Health, "BOTTOM", 0, -1)
 	self.Power:SetBackdrop(backdrophp)
 	self.Power.colorPower = true
-	self.Power.colorHappiness = true
 	self.Power.frequentUpdates = true
 	
 	self.RaidIcon = self.Health:CreateTexture(nil, "OVERLAY")
