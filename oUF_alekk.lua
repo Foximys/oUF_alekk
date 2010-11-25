@@ -105,6 +105,12 @@ oUF.Tags["alekk:tarhp"] = function(unit) -- yeah it needs to be different too ap
 	else
 		return format("%.1f%% | %s", (UnitHealth(unit)/UnitHealthMax(unit)*100),kilo(UnitHealthMax(unit)))
 	end
+	
+	if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
+		self:SetBackdropBorderColor(1,0.84,0,1)
+	else
+		self:SetBackdropBorderColor(1,1,1,1)
+	end	
 end
 
 oUF.Tags["alekk:tarpp"] = function(unit) -- gives 4.5k | 4.5k
@@ -299,8 +305,8 @@ local UnitSpecific = {
 		self.Info:SetPoint("LEFT", self.Power, "LEFT", 2, 0.5)
 		self:Tag(self.Info, "[difficulty][smartlevel] [raidcolor][smartclass] |r[race]")
 		
-		--BuffFrame:Hide()
-		--TemporaryEnchantFrame:Hide()
+		BuffFrame:Hide()
+		TemporaryEnchantFrame:Hide()
 		
 		self.Debuffs = CreateFrame("Frame", nil, self)
 		self.Debuffs:SetHeight(41*4)
@@ -655,6 +661,33 @@ local UnitSpecific = {
 		self.Health.value:SetPoint("RIGHT", self.Health, "RIGHT", -3, 0)
 		self:Tag(self.Health.value, "[perhp]%")
 	end,
+	
+	party = function(self, ...)
+		self.Health:SetHeight(23)
+		self.Power:SetHeight(6)
+		
+		self.Debuffs = CreateFrame("Frame", nil, self)
+		self.Debuffs:SetHeight(41*4)
+		self.Debuffs:SetWidth(41*4)
+		self.Debuffs.size = 38
+		self.Debuffs.spacing = 2
+		
+		self.Debuffs.initialAnchor = "TOPLEFT"
+		self.Debuffs["growth-x"] = "RIGHT"
+		self.Debuffs["growth-y"] = "UP"
+		self.Debuffs:SetPoint('TOPLEFT', self, 'TOPRIGHT', 1, 0)
+		self.Debuffs.PostCreateIcon = PostCreateAura
+		
+		self.Name = setFontString(self.Health, fontn, 13)
+		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
+		self.Name:SetWidth(80)
+		self.Name:SetHeight(20)
+		self:Tag(self.Name, "[name]")
+		
+		self.Health.value = setFontString(self.Health, fontn, 13)
+		self.Health.value:SetPoint("RIGHT", self.Health, "RIGHT", -3, 0)
+		self:Tag(self.Health.value, "[perhp]%")
+	end,
 
 }
 
@@ -741,6 +774,10 @@ local function Shared(self, unit)
 
 end
 
+  -----------------------------
+  -- SPAWN UNITS
+  -----------------------------
+
 oUF:RegisterStyle('alekk', Shared)
 
 oUF:Factory(function(self) -- the new "where stuff goes method
@@ -761,40 +798,33 @@ oUF:Factory(function(self) -- the new "where stuff goes method
 		"columnAnchorPoint", "TOP",
 		"sortMethod", "NAME",
 		"groupFilter", "MAINTANK",
-		"oUF-initialConfigFunction", [[
-			self:SetWidth(125)
-			self:SetHeight(38)
-			self:SetScale(mscale)
-			]]
-		)
+		"oUF-initialConfigFunction", ([[
+			self:SetWidth(%d)
+			self:SetHeight(%d)
+			]]):format(125, 38, mscale))
 	maintank:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
 	-- Maintank Targets
 	local mtt = oUF:SpawnHeader(
 		nil, nil, 'raid,party',
 		'showRaid', true,
 		'groupFilter', 'MAINTANK',
-		'oUF-initialConfigFunction', [[
-			self:SetWidth(125)
-			self:SetHeight(38)
-			self:SetScale(mscale)
+		'oUF-initialConfigFunction', ([[
+			self:SetWidth(%d)
+			self:SetHeight(%d)
 			self:SetAttribute('unitsuffix', 'target')
-			]]
-		)
+			]]):format(125, 38, mscale))
 	mtt:SetPoint("BOTTOMLEFT", maintank, "BOTTOMRIGHT")
 	-- party
 	if tParty then
-		local party = oUF:SpawnHeader(
-			nil, nil, 
-			'showSolo',     true, --debug
-			'showPlayer',   true,
-			"showRaid",     false,
+		local party = oUF:SpawnHeader('oUF_Party', nil, "custom  [group:party,nogroup:raid][@raid6,noexists,group:raid] show;hide",
+			'showParty', true, 
+			'showPlayer', true,
+			'sortMethod', "NAME",
 			'yOffset', -3,
-			'oUF-initialConfigFunction', [[
-				self:SetWidth(125)
-				self:SetHeight(38)
-				self:SetScale(mscale)
-			]]
-		)
+			'oUF-initialConfigFunction', ([[
+				self:SetWidth(%d)
+				self:SetHeight(%d)
+				]]):format(125, 38, mscale))
 		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 180)
 	end
 
