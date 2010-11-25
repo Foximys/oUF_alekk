@@ -754,7 +754,7 @@ oUF:Factory(function(self) -- the new "where stuff goes method
 	oUF:Spawn("focustarget"):SetPoint("TOPLEFT", oUF.units.focus, "TOPRIGHT", 5, 0)
 	
 	 -- Maintank Frames
-	local maintank = self:SpawnHeader("oUF_MainTank", nil, "raid, party, solo",
+	local maintank = oUF:SpawnHeader("oUF_MainTank", nil, "raid, party, solo",
 		"showRaid", true,
 		"yOffset", -3,
 		"point", "LEFT",
@@ -762,36 +762,37 @@ oUF:Factory(function(self) -- the new "where stuff goes method
 		"sortMethod", "NAME",
 		"groupFilter", "MAINTANK",
 		"oUF-initialConfigFunction", [[
-			self:SetWidth(%d)
-			self:SetHeight(%d)
-			self:SetScale(1))
+			self:SetWidth(125)
+			self:SetHeight(38)
+			self:SetScale(mscale)
 			]]
 		)
 	maintank:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
 	-- Maintank Targets
-	local mtt = self:SpawnHeader(
+	local mtt = oUF:SpawnHeader(
 		nil, nil, 'raid,party',
 		'showRaid', true,
 		'groupFilter', 'MAINTANK',
 		'oUF-initialConfigFunction', [[
-			self:SetHeight(22)
-			self:SetWidth(220)
+			self:SetWidth(125)
+			self:SetHeight(38)
+			self:SetScale(mscale)
 			self:SetAttribute('unitsuffix', 'target')
 			]]
 		)
 	mtt:SetPoint("BOTTOMLEFT", maintank, "BOTTOMRIGHT")
 	-- party
 	if tParty then
-		local party = self:SpawnHeader(
+		local party = oUF:SpawnHeader(
 			nil, nil, 
-			'party',
-			'showSolo', true, -- for the sake of debug
-			'showParty', true,
+			'showSolo',     true, --debug
+			'showPlayer',   true,
+			"showRaid",     false,
 			'yOffset', -3,
 			'oUF-initialConfigFunction', [[
-				-- unit {raid, party}{pet, target}
-				local unit = ...
-				-- can't set width/height
+				self:SetWidth(125)
+				self:SetHeight(38)
+				self:SetScale(mscale)
 			]]
 		)
 		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 180)
