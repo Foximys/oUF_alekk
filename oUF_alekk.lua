@@ -10,7 +10,7 @@ local trunebar = "Interface\\AddOns\\oUF_alekk\\textures\\rothTex"
 local textureborder = "Interface\\AddOns\\oUF_alekk\\textures\\Caith.tga"
 local bubbleTex = 'Interface\\Addons\\oUF_alekk\\textures\\bubbleTex'
 local cbborder = 'Interface\\AddOns\\oUF_alekk\\textures\\border'
-local glowTexture = [=[Interface\Addons\aNamePlates\media\glowTex]=]
+local glowTexture = 'Interface\\AddOns\\oUF_alekk\\textures\\glowTex'
 local mscale = 1
 
 local backdrop = {
