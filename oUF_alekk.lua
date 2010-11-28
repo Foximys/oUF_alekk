@@ -1,7 +1,6 @@
-﻿
-local tParty = true
+﻿local tParty = true
 local tCastbar = true
-local tRunebar = false
+local tRunebar = true
 local tBuffs = true
 
 local fontn = "Interface\\AddOns\\oUF_alekk\\fonts\\CalibriBold.ttf"
@@ -85,33 +84,26 @@ end
 
 -- New tagging system
 oUF.Tags["alekk:smarthp"] = function(unit) -- gives Dead Ghost or HP | max HP | percentage HP
-	if(not UnitIsConnected(unit)) then
-		return 'Offline'
-	elseif(UnitIsDead(unit)) then
-		return 'Dead'
-	elseif(UnitIsGhost(unit)) then
-		return 'Ghost'
-	else
-		return format("%d | %d | %d%%",UnitHealth(unit), UnitHealthMax(unit) ,floor(UnitHealth(unit)/UnitHealthMax(unit)*100))
-	end
-end
-
-oUF.Tags["alekk:tarhp"] = function(unit) -- yeah it needs to be different too apparently
-	if(not UnitIsConnected(unit)) then
-		return 'Offline'
-	elseif(UnitIsDead(unit)) then
-		return 'Dead'
-	elseif(UnitIsGhost(unit)) then
-		return 'Ghost'
-	else
-		return format("%.1f%% | %s", (UnitHealth(unit)/UnitHealthMax(unit)*100),kilo(UnitHealthMax(unit)))
-	end
+	local min, max = UnitHealth(unit), UnitHealthMax(unit)
+	local status = not UnitIsConnected(unit) and 'Offline' or UnitIsGhost(unit) and 'Ghost' or UnitIsDead(unit) and 'Dead'
 	
-	if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
-		self:SetBackdropBorderColor(1,0.84,0,1)
+	if(status) then
+		return status
+	elseif (unit == 'target') then
+		if UnitCanAttack('player', unit) then
+			return format("|cff0090ff%.1f%% | %s|r", (min/max*100),kilo(max))
+		else
+			return format("%.1f%% | %s", (min/max*100),kilo(max))
+		end 
+		
+		if (UnitClassification(unit)~= "normal" and UnitClassification(unit) ~= "trivial") then
+			self:SetBackdropBorderColor(1,0.84,0,1)
+		else
+			self:SetBackdropBorderColor(1,1,1,1)
+		end	
 	else
-		self:SetBackdropBorderColor(1,1,1,1)
-	end	
+		return format("%d | %d | %d%%",min , max ,floor(min/max*100))
+	end
 end
 
 oUF.Tags["alekk:tarpp"] = function(unit) -- gives 4.5k | 4.5k
@@ -144,16 +136,16 @@ local CreateAuraTimer = function(self,elapsed)
 				self.first = false
 			end
 			if self.timeLeft > 60 then
-				local time = FormatTime(self.timeLeft)
-				self.remaining:SetText(time)
+				local atime = FormatTime(self.timeLeft)
+				self.remaining:SetText(atime)
 				self.remaining:SetTextColor(0.8, 0.8, 0.9)
 			elseif self.timeLeft > 5 then
-				local time = FormatTime(self.timeLeft)
-				self.remaining:SetText(time)
+				local atime = FormatTime(self.timeLeft)
+				self.remaining:SetText(atime)
 				self.remaining:SetTextColor(0.8, 0.8, 0.2)
 			elseif self.timeLeft > 0 then
-				local time = FormatTime(self.timeLeft)
-				self.remaining:SetText(time)
+				local atime = FormatTime(self.timeLeft)
+				self.remaining:SetText(atime)
 				self.remaining:SetTextColor(0.9, 0.3, 0.3)
 			else
 				self.remaining:Hide()
@@ -164,7 +156,7 @@ local CreateAuraTimer = function(self,elapsed)
 	end
 end
 
-local PostCreateAura = function(element, button)
+local function PostCreateIcon(self, button, icons, index, debuff)
 	button.backdrop = CreateFrame("Frame", nil, button)
 	button.backdrop:SetPoint("TOPLEFT", button, "TOPLEFT", -3.5, 3)
 	button.backdrop:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 4, -3.5)
@@ -177,28 +169,38 @@ local PostCreateAura = function(element, button)
 	button.backdrop:SetBackdropBorderColor(0, 0, 0)
 
 	button.count:SetPoint("BOTTOMRIGHT", 3,-3)
-	button.count:SetJustifyH("RIGHT")	
-	button.count:SetFont(fontn, 17, "OUTLINE")
+	button.count:SetJustifyH("RIGHT")
+	if self.unit == "player" then
+		button.count:SetFont(fontn, 17, "OUTLINE")
+	else
+		button.count:SetFont(fontn, 14, "OUTLINE")
+	end
 	button.count:SetTextColor(0.8, 0.8, 0.8)
 
 	button.cd.noOCC = true
 	button.cd.noCooldownCount = true
-	button.disableCooldown = true
-	
-	button.icon:SetTexCoord(.07, .93, .07, .93)
+	icons.disableCooldown = true
 
 	button.overlay:SetTexture(textureborder)
 	button.overlay:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
 	button.overlay:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
-	button.overlay.Hide = function(self) self:SetVertexColor(0.50, 0.50, 0.50) end
-
+	button.overlay.Hide = function(self) self:SetVertexColor(0.25, 0.25, 0.25) end
+	
 	button.remaining = setFontString(button, fontn, 12)
-	button.remaining:SetPoint("BOTTOM", button, "BOTTOM", -1, 1)
+		if self.unit == "player" then
+			button.remaining:SetFont(fontn, 17, "OUTLINE")
+			
+		end
+	if icons == self.Enchant then
+		button.remaining:SetFont(fontn, 15, "OUTLINE")
+		button.overlay:SetVertexColor(0.33, 0.59, 0.33)
+	end
+	button.remaining:SetPoint("CENTER", 1, -1)
 end
 
-local function PostUpdateAuraIcon(self, icons, unit, icon, index, offset, filter, debuff)
-	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
+local function PostUpdateIcon(element, unit, icon, index, offset, filter, debuff)
+	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, filter)
 	if (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and self.unit == "target" then
 		if icon.debuff then
 			icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
@@ -224,6 +226,17 @@ local function PostUpdateAuraIcon(self, icons, unit, icon, index, offset, filter
 	icon.timeLeft = expirationTime
 	icon.first = true
 	icon:SetScript("OnUpdate", CreateAuraTimer)
+end
+
+local menu = function(self)
+	local unit = self.unit:sub(1, -2)
+	local cunit = self.unit:gsub('(.)', string.upper, 1)
+
+	if(unit == 'party') then
+		ToggleDropDownMenu(1, nil, _G['PartyMemberFrame'..self.id..'DropDown'], 'cursor', 0, 0)
+	elseif(_G[cunit..'FrameDropDown']) then
+		ToggleDropDownMenu(1, nil, _G[cunit..'FrameDropDown'], 'cursor', 0, 0)
+	end
 end
 
 local CreateEnchantTimer = function(self, icons)
@@ -281,6 +294,7 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetHeight(20)
 		self.Health.value:SetPoint("RIGHT", -3,0)
+		self.Health.value.frequentUpdates = 1/4
 		self:Tag(self.Health.value, "[alekk:smarthp]")
 		
 		self.Power.value = setFontString(self.Power, fontn, 12)
@@ -316,7 +330,7 @@ local UnitSpecific = {
 			self.Debuffs["growth-x"] = "RIGHT"
 			self.Debuffs["growth-y"] = "UP"
 			self.Debuffs:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 7.5)
-			self.Debuffs.PostCreateIcon = PostUpdateAuraIcon
+			--self.Debuffs.PostCreateIcon = PostCreateIcon
 		
 			self.Buffs = CreateFrame("Frame", nil, self)
 			self.Buffs:SetHeight(320)
@@ -329,7 +343,7 @@ local UnitSpecific = {
 			self.Buffs["growth-x"] = "LEFT"
 			self.Buffs["growth-y"] = "DOWN"
 			self.Buffs.filter = true
-			self.Buffs.PostCreateIcon = PostCreateAura
+			--self.Buffs.PostCreateIcon = PostCreateIcon
 		end
 		
 		self.Combat = self.Health:CreateTexture(nil, 'OVERLAY')
@@ -383,42 +397,40 @@ local UnitSpecific = {
 		end
 		
 		if select(2, UnitClass("player") == 'DEATHKNIGHT' and tRunebar) then
-		self.RuneBar = {}
-		for i = 1, 6 do
-			self.RuneBar[i] = CreateFrame('StatusBar', nil, self)
-			if(i == 1) then
-				self.RuneBar[i]:SetPoint('BOTTOMRIGHT', self, 'BOTTOMLEFT', -4, 4)
-			else
-				self.RuneBar[i]:SetPoint('TOPRIGHT', self.RuneBar[i-1], 'TOPLEFT', -7, 0)
-			end
-			self.RuneBar[i]:SetStatusBarTexture(texturebar)--(trunebar)
-			--self.RuneBar[i]:SetStatusBarColor(unpack(runeloadcolors[i]))
-			self.RuneBar[i]:SetHeight(39)
-			self.RuneBar[i]:SetWidth(6)--(275/6 - 1.25)
-			self.RuneBar[i]:SetBackdrop(backdrophp)
-			self.RuneBar[i]:SetBackdropColor(.75,.75,.75)
-			self.RuneBar[i]:SetMinMaxValues(0, 1)
-			self.RuneBar[i]:SetOrientation("Vertical")
-			self.RuneBar[i]:SetID(i)
-			local runetype = GetRuneType(i)
-			if(runetype) then
-				self.RuneBar[i]:SetStatusBarColor(unpack(colors.runes[runetype]))
+			self.RuneBar = {}
+			for i = 1, 6 do
+				self.RuneBar[i] = CreateFrame('StatusBar', nil, self)
+				if(i == 1) then
+					self.RuneBar[i]:SetPoint('BOTTOMRIGHT', self, 'BOTTOMLEFT', -4, 4)
+				else
+					self.RuneBar[i]:SetPoint('TOPRIGHT', self.RuneBar[i-1], 'TOPLEFT', -7, 0)
+				end
+				self.RuneBar[i]:SetStatusBarTexture(texturebar)--(trunebar)
+				--self.RuneBar[i]:SetStatusBarColor(unpack(runeloadcolors[i]))
+				self.RuneBar[i]:SetHeight(39)
+				self.RuneBar[i]:SetWidth(6)--(275/6 - 1.25)
+				self.RuneBar[i]:SetBackdrop(backdrophp)
+				self.RuneBar[i]:SetBackdropColor(.75,.75,.75)
+				self.RuneBar[i]:SetMinMaxValues(0, 1)
+				self.RuneBar[i]:SetOrientation("Vertical")
+				self.RuneBar[i]:SetID(i)
+				local runetype = GetRuneType(i)
+				if(runetype) then
+					self.RuneBar[i]:SetStatusBarColor(unpack(colors.runes[runetype]))
+					
+				end
+
+				self.RuneBar[i].bg = CreateFrame('StatusBar', nil, self.RuneBar[i])
+				self.RuneBar[i].bg:SetPoint('BOTTOMRIGHT', self.RuneBar[i], 'BOTTOMRIGHT', 4, -4)
+				self.RuneBar[i].bg:SetPoint('TOPLEFT', self.RuneBar[i], 'TOPLEFT', -4, 4)
+				self.RuneBar[i].bg:SetBackdrop(backdrop)
+				self.RuneBar[i].bg:SetBackdropColor(0,0,0,1)
+				self.RuneBar[i].bg:SetHeight(27)
+				self.RuneBar[i].bg:SetFrameLevel(0)
 				
 			end
-
-			self.RuneBar[i].bg = CreateFrame('StatusBar', nil, self.RuneBar[i])
-			self.RuneBar[i].bg:SetPoint('BOTTOMRIGHT', self.RuneBar[i], 'BOTTOMRIGHT', 4, -4)
-			self.RuneBar[i].bg:SetPoint('TOPLEFT', self.RuneBar[i], 'TOPLEFT', -4, 4)
-			self.RuneBar[i].bg:SetBackdrop(backdrop)
-			self.RuneBar[i].bg:SetBackdropColor(0,0,0,1)
-			self.RuneBar[i].bg:SetHeight(27)
-			self.RuneBar[i].bg:SetFrameLevel(0)
-			
+			RuneFrame:Hide()
 		end
-
-		RuneFrame:Hide()
-
-	end
 	end,
 	
 	target = function(self)
@@ -432,7 +444,8 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetHeight(20)
 		self.Health.value:SetPoint("LEFT", 2, 0)
-		self:Tag(self.Health.value, "[alekk:tarhp]")
+		self.Health.value.frequentUpdates = 1/4
+		self:Tag(self.Health.value, "[alekk:smarthp]")
 		
 		self.Power.value = setFontString(self.Power, fontn, 12)
 		self.Power.value:SetPoint("LEFT", self.Power, "LEFT", 2, 0)
@@ -462,7 +475,7 @@ local UnitSpecific = {
 			self.Auras.gap = true
 			self.Auras.numBuffs = 18 
 			self.Auras.numDebuffs = 18 
-			self.Auras.PostCreateIcon = PostUpdateAuraIcon
+			--self.Auras.PostCreateIcon = PostUpdateAuraIcon
 			--self.sortAuras = {}
 			--self.sortAuras.selfFirst = true
 		end
@@ -651,7 +664,7 @@ local UnitSpecific = {
 			self.Auras.gap = true
 			self.Auras.numBuffs = 8
 			self.Auras.numDebuffs = 8
-			self.Auras.PostCreateIcon = PostCreateAura
+			--self.Auras.PostCreateIcon = PostCreateAura
 		end
 		
 		self.Name = setFontString(self.Health, fontn, 13)
@@ -746,7 +759,10 @@ local function Shared(self, unit)
 	self.RaidIcon:SetPoint("TOP", self, 0, 5)
 	self.RaidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 
-	self.PostCreateEnchantIcon = PostCreateAuraIcon
+	self.PostCreateIcon = PostCreateIcon
+	self.PostUpdateIcon = PostUpdateIcon
+	
+	self.PostCreateEnchantIcon = PostCreateIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 	
 	if(not unit) then 
