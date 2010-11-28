@@ -1,7 +1,8 @@
 ﻿
 local tParty = true
 local tCastbar = true
-local tRunebar = true
+local tRunebar = false
+local tBuffs = true
 
 local fontn = "Interface\\AddOns\\oUF_alekk\\fonts\\CalibriBold.ttf"
 local fontpixel = "Interface\\AddOns\\oUF_alekk\\fonts\\Calibri.ttf"
@@ -193,40 +194,36 @@ local PostCreateAura = function(element, button)
 	button.overlay.Hide = function(self) self:SetVertexColor(0.50, 0.50, 0.50) end
 
 	button.remaining = setFontString(button, fontn, 12)
-	button.remaining:SetPoint("CENTER", 1, -1)
+	button.remaining:SetPoint("BOTTOM", button, "BOTTOM", -1, 1)
 end
 
-local PostUpdateDebuff = function(element, unit, button, index)
-	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, button.filter)
+local function PostUpdateAuraIcon(self, icons, unit, icon, index, offset, filter, debuff)
+	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
 	if (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and self.unit == "target" then
 		if icon.debuff then
-			button.overlay:SetVertexColor(0.8, 0.2, 0.2)
-			button.icon:SetTexCoord(.07, .93, .07, .93)
+			icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
 		else
-			button.overlay:SetVertexColor(0.2, 0.8, 0.2)
-			button.icon:SetTexCoord(.07, .93, .07, .93)
+			icon.overlay:SetVertexColor(0.2, 0.8, 0.2)
 		end
 	else
 		if UnitIsEnemy("player", unit) then
-			if button.debuff then
-				button.icon:SetDesaturated(true)
-				button.icon:SetTexCoord(.07, .93, .07, .93)
+			if icon.debuff then
+				icon.icon:SetDesaturated(true)
 			end
 		end
-		button.overlay:SetVertexColor(0.5, 0.5, 0.5)
-		button.icon:SetTexCoord(.07, .93, .07, .93)
-	end
-	
-	if duration and duration > 0 then
-		button.remaining:Show()
-	else
-		button.remaining:Hide()
+		icon.overlay:SetVertexColor(0.5, 0.5, 0.5)
 	end
 
-	button.duration = duration
-	button.timeLeft = expirationTime
-	button.first = true
-	button:SetScript("OnUpdate", CreateAuraTimer)
+	if duration and duration > 0 then
+		icon.remaining:Show()
+	else
+		icon.remaining:Hide()
+	end
+
+	icon.duration = duration
+	icon.timeLeft = expirationTime
+	icon.first = true
+	icon:SetScript("OnUpdate", CreateAuraTimer)
 end
 
 local CreateEnchantTimer = function(self, icons)
@@ -305,33 +302,35 @@ local UnitSpecific = {
 		self.Info:SetPoint("LEFT", self.Power, "LEFT", 2, 0.5)
 		self:Tag(self.Info, "[difficulty][smartlevel] [raidcolor][smartclass] |r[race]")
 		
-		BuffFrame:Hide()
-		TemporaryEnchantFrame:Hide()
+		if (tBuffs) then
+			BuffFrame:Hide()
+			TemporaryEnchantFrame:Hide()
+			
+			self.Debuffs = CreateFrame("Frame", nil, self)
+			self.Debuffs:SetHeight(41*4)
+			self.Debuffs:SetWidth(41*4)
+			self.Debuffs.size = 40
+			self.Debuffs.spacing = 2
+			
+			self.Debuffs.initialAnchor = "BOTTOMLEFT"
+			self.Debuffs["growth-x"] = "RIGHT"
+			self.Debuffs["growth-y"] = "UP"
+			self.Debuffs:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 7.5)
+			self.Debuffs.PostCreateIcon = PostUpdateAuraIcon
 		
-		self.Debuffs = CreateFrame("Frame", nil, self)
-		self.Debuffs:SetHeight(41*4)
-		self.Debuffs:SetWidth(41*4)
-		self.Debuffs.size = 40
-		self.Debuffs.spacing = 2
-		
-		self.Debuffs.initialAnchor = "BOTTOMLEFT"
-		self.Debuffs["growth-x"] = "RIGHT"
-		self.Debuffs["growth-y"] = "UP"
-		self.Debuffs:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 7.5)
-		self.Debuffs.PostCreateIcon = PostCreateAura
-	
-		self.Buffs = CreateFrame("Frame", nil, self)
-		self.Buffs:SetHeight(320)
-		self.Buffs:SetWidth(42 * 12)
-		self.Buffs.size = 35
-		self.Buffs.spacing = 2
-		
-		self.Buffs:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -5, -35)
-		self.Buffs.initialAnchor = "TOPRIGHT"
-		self.Buffs["growth-x"] = "LEFT"
-		self.Buffs["growth-y"] = "DOWN"
-		self.Buffs.filter = true
-		self.Buffs.PostCreateIcon = PostCreateAura
+			self.Buffs = CreateFrame("Frame", nil, self)
+			self.Buffs:SetHeight(320)
+			self.Buffs:SetWidth(42 * 12)
+			self.Buffs.size = 35
+			self.Buffs.spacing = 2
+			
+			self.Buffs:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -5, -35)
+			self.Buffs.initialAnchor = "TOPRIGHT"
+			self.Buffs["growth-x"] = "LEFT"
+			self.Buffs["growth-y"] = "DOWN"
+			self.Buffs.filter = true
+			self.Buffs.PostCreateIcon = PostCreateAura
+		end
 		
 		self.Combat = self.Health:CreateTexture(nil, 'OVERLAY')
 		self.Combat:SetHeight(17)
@@ -450,21 +449,23 @@ local UnitSpecific = {
 		self.Name:SetJustifyH('RIGHT')
 		self:Tag(self.Name, "[name]")
 		
-		self.Auras = CreateFrame('StatusBar', nil, self)
-		self.Auras:SetHeight(120)
-		self.Auras:SetWidth(280)
-		self.Auras:SetPoint('BOTTOMLEFT', self, 'TOPLEFT', 1, 2)
-		self.Auras['growth-x'] = 'RIGHT'
-		self.Auras['growth-y'] = 'UP' 
-		self.Auras.initialAnchor = 'BOTTOMLEFT'
-		self.Auras.spacing = 2.5
-		self.Auras.size = 28
-		self.Auras.gap = true
-		self.Auras.numBuffs = 18 
-		self.Auras.numDebuffs = 18 
-		self.Auras.PostCreateIcon = PostCreateAura
-		--self.sortAuras = {}
-		--self.sortAuras.selfFirst = true
+		if (tBuffs) then
+			self.Auras = CreateFrame('StatusBar', nil, self)
+			self.Auras:SetHeight(120)
+			self.Auras:SetWidth(280)
+			self.Auras:SetPoint('BOTTOMLEFT', self, 'TOPLEFT', 1, 2)
+			self.Auras['growth-x'] = 'RIGHT'
+			self.Auras['growth-y'] = 'UP' 
+			self.Auras.initialAnchor = 'BOTTOMLEFT'
+			self.Auras.spacing = 2.5
+			self.Auras.size = 28
+			self.Auras.gap = true
+			self.Auras.numBuffs = 18 
+			self.Auras.numDebuffs = 18 
+			self.Auras.PostCreateIcon = PostUpdateAuraIcon
+			--self.sortAuras = {}
+			--self.sortAuras.selfFirst = true
+		end
 		
 		self.CPoints = {}
 		--self.CPoints.unit = 'player'
@@ -637,19 +638,21 @@ local UnitSpecific = {
 		self.Health:SetHeight(23)
 		self.Power:SetHeight(6)
 		
-		self.Auras = CreateFrame('StatusBar', nil, self)
-		self.Auras:SetHeight(100)
-		self.Auras:SetWidth(130)
-		self.Auras:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 1, -2)
-		self.Auras['growth-x'] = 'RIGHT'
-		self.Auras['growth-y'] = 'DOWN'
-		self.Auras.initialAnchor = 'TOPLEFT' 
-		self.Auras.spacing = 3
-		self.Auras.size = 28
-		self.Auras.gap = true
-		self.Auras.numBuffs = 8
-		self.Auras.numDebuffs = 8
-		self.Auras.PostCreateIcon = PostCreateAura
+		if (tBuffs) then
+			self.Auras = CreateFrame('StatusBar', nil, self)
+			self.Auras:SetHeight(100)
+			self.Auras:SetWidth(130)
+			self.Auras:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 1, -2)
+			self.Auras['growth-x'] = 'RIGHT'
+			self.Auras['growth-y'] = 'DOWN'
+			self.Auras.initialAnchor = 'TOPLEFT' 
+			self.Auras.spacing = 3
+			self.Auras.size = 28
+			self.Auras.gap = true
+			self.Auras.numBuffs = 8
+			self.Auras.numDebuffs = 8
+			self.Auras.PostCreateIcon = PostCreateAura
+		end
 		
 		self.Name = setFontString(self.Health, fontn, 13)
 		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
@@ -665,18 +668,6 @@ local UnitSpecific = {
 	party = function(self, ...)
 		self.Health:SetHeight(23)
 		self.Power:SetHeight(6)
-		
-		self.Debuffs = CreateFrame("Frame", nil, self)
-		self.Debuffs:SetHeight(41*4)
-		self.Debuffs:SetWidth(41*4)
-		self.Debuffs.size = 38
-		self.Debuffs.spacing = 2
-		
-		self.Debuffs.initialAnchor = "TOPLEFT"
-		self.Debuffs["growth-x"] = "RIGHT"
-		self.Debuffs["growth-y"] = "UP"
-		self.Debuffs:SetPoint('TOPLEFT', self, 'TOPRIGHT', 1, 0)
-		self.Debuffs.PostCreateIcon = PostCreateAura
 		
 		self.Name = setFontString(self.Health, fontn, 13)
 		self.Name:SetPoint("LEFT", self.Health, "LEFT",2,0)
@@ -755,8 +746,6 @@ local function Shared(self, unit)
 	self.RaidIcon:SetPoint("TOP", self, 0, 5)
 	self.RaidIcon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcons")
 
-	--self.PostCreateAuraIcon = PostCreateAuraIcon
-	--self.PostUpdateAuraIcon = PostUpdateAuraIcon
 	self.PostCreateEnchantIcon = PostCreateAuraIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 	
