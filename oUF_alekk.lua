@@ -468,6 +468,59 @@ local UnitSpecific = {
 			self:RegisterEvent('RUNE_REGEN_UPDATE', UpdateRuneType)
 			self:RegisterEvent('RUNE_POWER_UPDATE', UpdateRunePower)
 		end
+		
+		if(select(2, UnitClass("player")) == 'PALADIN') then
+			self.HolyPower = {}
+
+			self.HolyPower[1] = self.Power:CreateTexture(nil, 'OVERLAY')
+			self.HolyPower[1]:SetHeight(17)
+			self.HolyPower[1]:SetWidth(17)
+			self.HolyPower[1]:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, 0)
+			self.HolyPower[1]:SetTexture(bubbleTex)
+			self.HolyPower[1]:SetVertexColor(.67,.67,.33)
+
+			self.HolyPower[2] = self.Power:CreateTexture(nil, 'OVERLAY')
+			self.HolyPower[2]:SetHeight(17)
+			self.HolyPower[2]:SetWidth(17)
+			self.HolyPower[2]:SetPoint('LEFT', self.HolyPower[1], 'RIGHT', 1)
+			self.HolyPower[2]:SetTexture(bubbleTex)
+			self.HolyPower[2]:SetVertexColor(.67,.67,.33)
+
+			self.HolyPower[3] = self.Power:CreateTexture(nil, 'OVERLAY')
+			self.HolyPower[3]:SetHeight(17)
+			self.HolyPower[3]:SetWidth(17)
+			self.HolyPower[3]:SetPoint('LEFT', self.HolyPower[2], 'RIGHT', 1)
+			self.HolyPower[3]:SetTexture(bubbleTex)
+			self.HolyPower[3]:SetVertexColor(.67,.67,.33)
+			
+		end
+
+		if(select(2, UnitClass("player")) == 'WARLOCK') then
+			self.SoulShards = {}
+
+			self.SoulShards[1] = self.Power:CreateTexture(nil, 'OVERLAY')
+			self.SoulShards[1]:SetHeight(17)
+			self.SoulShards[1]:SetWidth(17)
+			self.SoulShards[1]:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, 0)
+			self.SoulShards[1]:SetTexture(bubbleTex)
+			self.SoulShards[1]:SetVertexColor(.187,.45,.45)
+
+			self.SoulShards[2] = self.Power:CreateTexture(nil, 'OVERLAY')
+			self.SoulShards[2]:SetHeight(17)
+			self.SoulShards[2]:SetWidth(17)
+			self.SoulShards[2]:SetPoint('LEFT', self.SoulShards[1], 'RIGHT', 1)
+			self.SoulShards[2]:SetTexture(bubbleTex)
+			self.SoulShards[2]:SetVertexColor(.187,.45,.45)
+
+			self.SoulShards[3] = self.Power:CreateTexture(nil, 'OVERLAY')
+			self.SoulShards[3]:SetHeight(17)
+			self.SoulShards[3]:SetWidth(17)
+			self.SoulShards[3]:SetPoint('LEFT', self.SoulShards[2], 'RIGHT', 1)
+			self.SoulShards[3]:SetTexture(bubbleTex)
+			self.SoulShards[3]:SetVertexColor(.187,.45,.45)
+			
+		end
+
 	end,
 	
 	target = function(self)
