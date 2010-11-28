@@ -53,10 +53,10 @@ oUF.colors.happiness = {
 }
 
 oUF.colors.runes = {
-		[1] = {0.69, 0.31, 0.31},
-		[2] = {0.33, 0.59, 0.33},
-		[3] = {0.31, 0.45, 0.63},
-		[4] = {0.84, 0.75, 0.05},
+		[1] = {0.69, 0.31, 0.31},	-- Blood
+		[2] = {0.33, 0.59, 0.33},	-- Unholy
+		[3] = {0.31, 0.45, 0.63},	-- Frost
+		[4] = {0.84, 0.75, 0.05},	-- Death
 }
 
 oUF.colors.tapped = {.55,.57,.61}
@@ -110,6 +110,42 @@ oUF.Tags["alekk:tarpp"] = function(unit) -- gives 4.5k | 4.5k
 	return UnitIsDeadOrGhost(unit) and "" or UnitPower(unit) <= 0 and "" or format("%s | %s", kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
 end
 
+local function UpdateRuneBar(self, elapsed)
+	local start, duration, ready = GetRuneCooldown(self:GetID())
+
+	if(ready) then
+		self:SetValue(1)
+		self:SetScript('OnUpdate', nil)
+	else
+		self:SetValue((GetTime() - start) / duration)
+	end
+end
+
+local function UpdateRunePower(self, event, rune, usable)
+	for i = 1, 6 do
+		if(rune == i and not usable and GetRuneType(rune)) then
+			self.RuneBar[i]:SetScript('OnUpdate', UpdateRuneBar)
+		end
+	end
+end
+
+local function UpdateRuneType(self, event, rune)
+	if(rune) then
+		local runetype = GetRuneType(rune)
+		if(runetype) then
+			self.RuneBar[rune]:SetStatusBarColor(unpack(colors.runes[runetype]))
+		end
+	else
+		for i = 1, 6 do
+			local runetype = GetRuneType(i)
+			if(runetype) then
+				self.RuneBar[i]:SetStatusBarColor(unpack(colors.runes[runetype]))
+				
+			end
+		end
+	end
+end
+
 local FormatTime = function(s)
 	local DAY, HOUR, MINUTE = 86400, 3600, 60
 	if s >= DAY then
@@ -157,6 +193,7 @@ local CreateAuraTimer = function(self,elapsed)
 end
 
 local function PostCreateIcon(self, button, icons, index, debuff)
+	--[[
 	button.backdrop = CreateFrame("Frame", nil, button)
 	button.backdrop:SetPoint("TOPLEFT", button, "TOPLEFT", -3.5, 3)
 	button.backdrop:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 4, -3.5)
@@ -167,7 +204,7 @@ local function PostCreateIcon(self, button, icons, index, debuff)
 	}
 	button.backdrop:SetBackdropColor(0, 0, 0, 0)
 	button.backdrop:SetBackdropBorderColor(0, 0, 0)
-
+--]]
 	button.count:SetPoint("BOTTOMRIGHT", 3,-3)
 	button.count:SetJustifyH("RIGHT")
 	if self.unit == "player" then
@@ -177,20 +214,19 @@ local function PostCreateIcon(self, button, icons, index, debuff)
 	end
 	button.count:SetTextColor(0.8, 0.8, 0.8)
 
-	button.cd.noOCC = true
+	button.cd.noOCC = true -- disables omnicc
 	button.cd.noCooldownCount = true
-	icons.disableCooldown = true
+	icons.disableCooldown = true -- disables cooldown spiral
 
 	button.overlay:SetTexture(textureborder)
-	button.overlay:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
-	button.overlay:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
+	button.overlay:SetPoint("TOPLEFT", button.icon, "TOPLEFT", -1, 1)
+	button.overlay:SetPoint("BOTTOMRIGHT", button.icon, "BOTTOMRIGHT", 1, -1)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
 	button.overlay.Hide = function(self) self:SetVertexColor(0.25, 0.25, 0.25) end
 	
 	button.remaining = setFontString(button, fontn, 12)
 		if self.unit == "player" then
 			button.remaining:SetFont(fontn, 17, "OUTLINE")
-			
 		end
 	if icons == self.Enchant then
 		button.remaining:SetFont(fontn, 15, "OUTLINE")
@@ -199,7 +235,7 @@ local function PostCreateIcon(self, button, icons, index, debuff)
 	button.remaining:SetPoint("CENTER", 1, -1)
 end
 
-local function PostUpdateIcon(element, unit, icon, index, offset, filter, debuff)
+local function PostUpdateIcon(element, icons, unit, icon, index, offset, filter, debuff)
 	local _, _, _, _, _, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, filter)
 	if (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and self.unit == "target" then
 		if icon.debuff then
@@ -330,7 +366,6 @@ local UnitSpecific = {
 			self.Debuffs["growth-x"] = "RIGHT"
 			self.Debuffs["growth-y"] = "UP"
 			self.Debuffs:SetPoint("BOTTOMLEFT", self, "TOPLEFT", 0, 7.5)
-			--self.Debuffs.PostCreateIcon = PostCreateIcon
 		
 			self.Buffs = CreateFrame("Frame", nil, self)
 			self.Buffs:SetHeight(320)
@@ -343,7 +378,6 @@ local UnitSpecific = {
 			self.Buffs["growth-x"] = "LEFT"
 			self.Buffs["growth-y"] = "DOWN"
 			self.Buffs.filter = true
-			--self.Buffs.PostCreateIcon = PostCreateIcon
 		end
 		
 		self.Combat = self.Health:CreateTexture(nil, 'OVERLAY')
@@ -396,7 +430,7 @@ local UnitSpecific = {
 			self.Castbar.SafeZone:SetVertexColor(1,1,.01,0.5)
 		end
 		
-		if select(2, UnitClass("player") == 'DEATHKNIGHT' and tRunebar) then
+		if (select(2, UnitClass("player")) == "DEATHKNIGHT" and tRunebar) then
 			self.RuneBar = {}
 			for i = 1, 6 do
 				self.RuneBar[i] = CreateFrame('StatusBar', nil, self)
@@ -416,8 +450,7 @@ local UnitSpecific = {
 				self.RuneBar[i]:SetID(i)
 				local runetype = GetRuneType(i)
 				if(runetype) then
-					self.RuneBar[i]:SetStatusBarColor(unpack(colors.runes[runetype]))
-					
+					self.RuneBar[i]:SetStatusBarColor(unpack(oUF.colors.runes[runetype]))
 				end
 
 				self.RuneBar[i].bg = CreateFrame('StatusBar', nil, self.RuneBar[i])
@@ -430,6 +463,10 @@ local UnitSpecific = {
 				
 			end
 			RuneFrame:Hide()
+			
+			self:RegisterEvent('RUNE_TYPE_UPDATE', UpdateRuneType)
+			self:RegisterEvent('RUNE_REGEN_UPDATE', UpdateRuneType)
+			self:RegisterEvent('RUNE_POWER_UPDATE', UpdateRunePower)
 		end
 	end,
 	
