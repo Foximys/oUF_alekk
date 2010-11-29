@@ -475,59 +475,43 @@ local UnitSpecific = {
 		
 		if(select(2, UnitClass('player')) == 'PALADIN') then
 			self.HolyPower = {}
-
-			self.HolyPower[1] = self.Power:CreateTexture(nil, 'OVERLAY')
-			self.HolyPower[1]:SetHeight(17)
-			self.HolyPower[1]:SetWidth(17)
-			self.HolyPower[1]:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, 0)
-			self.HolyPower[1]:SetTexture(bubbleTex)
-			self.HolyPower[1]:SetVertexColor(.67,.67,.33)
-
-			self.HolyPower[2] = self.Power:CreateTexture(nil, 'OVERLAY')
-			self.HolyPower[2]:SetHeight(17)
-			self.HolyPower[2]:SetWidth(17)
-			self.HolyPower[2]:SetPoint('LEFT', self.HolyPower[1], 'RIGHT', 1)
-			self.HolyPower[2]:SetTexture(bubbleTex)
-			self.HolyPower[2]:SetVertexColor(.67,.67,.33)
-
-			self.HolyPower[3] = self.Power:CreateTexture(nil, 'OVERLAY')
-			self.HolyPower[3]:SetHeight(17)
-			self.HolyPower[3]:SetWidth(17)
-			self.HolyPower[3]:SetPoint('LEFT', self.HolyPower[2], 'RIGHT', 1)
-			self.HolyPower[3]:SetTexture(bubbleTex)
-			self.HolyPower[3]:SetVertexColor(.67,.67,.33)
 			
+			for i = 1, MAX_HOLY_POWER do
+				self.HolyPower[i] = self.Health:CreateTexture(nil, 'OVERLAY')
+				self.HolyPower[i]:SetHeight(17)
+				self.HolyPower[i]:SetWidth(17)
+				self.HolyPower[i]:SetTexture(bubbleTex)
+				if (i == 1) then
+					self.HolyPower[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
+				else
+					self.HolyPower[i]:SetPoint('LEFT', self.HolyPower[i-1], 'RIGHT', 1)
+				end	
+				local color = self.colors.power["HOLY_POWER"]
+				self.HolyPower[i]:SetVertexColor(color[1], color[2], color[3])
+			end			
 		end
 
 		if(select(2, UnitClass('player')) == 'WARLOCK') then
 			self.SoulShards = {}
-
-			self.SoulShards[1] = self.Power:CreateTexture(nil, 'OVERLAY')
-			self.SoulShards[1]:SetHeight(17)
-			self.SoulShards[1]:SetWidth(17)
-			self.SoulShards[1]:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, 0)
-			self.SoulShards[1]:SetTexture(bubbleTex)
-			self.SoulShards[1]:SetVertexColor(.187,.45,.45)
-
-			self.SoulShards[2] = self.Power:CreateTexture(nil, 'OVERLAY')
-			self.SoulShards[2]:SetHeight(17)
-			self.SoulShards[2]:SetWidth(17)
-			self.SoulShards[2]:SetPoint('LEFT', self.SoulShards[1], 'RIGHT', 1)
-			self.SoulShards[2]:SetTexture(bubbleTex)
-			self.SoulShards[2]:SetVertexColor(.187,.45,.45)
-
-			self.SoulShards[3] = self.Power:CreateTexture(nil, 'OVERLAY')
-			self.SoulShards[3]:SetHeight(17)
-			self.SoulShards[3]:SetWidth(17)
-			self.SoulShards[3]:SetPoint('LEFT', self.SoulShards[2], 'RIGHT', 1)
-			self.SoulShards[3]:SetTexture(bubbleTex)
-			self.SoulShards[3]:SetVertexColor(.187,.45,.45)
 			
+			for i = 1, 3 do
+				self.SoulShards[i] = self.Health:CreateTexture(nil, 'OVERLAY')
+				self.SoulShards[i]:SetHeight(17)
+				self.SoulShards[i]:SetWidth(17)
+				self.SoulShards[i]:SetTexture(bubbleTex)
+				if (i == 1) then
+					self.SoulShards[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
+				else
+					self.SoulShards[i]:SetPoint('LEFT', self.SoulShards[i-1], 'RIGHT', 1)
+				end	
+				local color = self.colors.power["SOUL_SHARDS"]
+				self.SoulShards[i]:SetVertexColor(color[1], color[2], color[3])
+			end
 		end
 		
 		if select(2, UnitClass('player')) == 'DRUID' then
 			self.EclipseBar = CreateFrame('Frame', nil, self)
-			self.EclipseBar:SetSize(275, 24)
+			self.EclipseBar:SetSize(275, 20)
 			self.EclipseBar:SetPoint('TOPLEFT', self, 'BOTTOMLEFT', 0, 0)
 			self.EclipseBar:SetPoint('TOPRIGHT', self, 'BOTTOMRIGHT', 0, 0)
 			self.EclipseBar:SetBackdrop(backdrop)
@@ -544,25 +528,19 @@ local UnitSpecific = {
 			self.EclipseBar.SolarBar:SetSize(266, 13)
 			self.EclipseBar.SolarBar:SetStatusBarTexture(texturebar)
 			self.EclipseBar.SolarBar:SetStatusBarColor(0.95, 0.73, 0.15)
-			
+			--[[
 			self.EclipseBar.Glow = self.EclipseBar:CreateTexture(nil, 'OVERLAY')
-			self.EclipseBar.Glow:SetTexture[[Interface\CastingBar\UI-CastingBar-Spark]]
+			self.EclipseBar.Glow:SetTexture('Interface\\CastingBar\\UI-CastingBar-Spark')
+			self.EclipseBar.Glow:SetPoint('CENTER', self.EclipseBar.LunarBar, 'RIGHT', 0, 0)
 			self.EclipseBar.Glow:SetBlendMode('Add')
 			self.EclipseBar.Glow:SetHeight(24)
 			self.EclipseBar.Glow:SetWidth(25)
 			self.EclipseBar.Glow:SetVertexColor(.69,.31,.31)
-						
+			--]]
 			self.EclipseBar.Text = setFontString(self.EclipseBar.SolarBar, fontn, 13)
 			self.EclipseBar.Text:SetPoint('CENTER', self.EclipseBar, 'CENTER', 0, 0)
 			self:Tag(self.EclipseBar.Text, '[pereclipse]%')
 		end
-		--[[
-		if UnitAffectingCombat('player') then
-			self.EclipseBar:Show()
-		else
-			self.EclipseBar:Hide()
-		end
-		--]]
 	end,
 	
 	target = function(self)
@@ -904,6 +882,8 @@ local function Shared(self, unit)
 		}
 	end
 	
+	self.MoveableFrames = true
+	
 	if(UnitSpecific[unit]) then
 		return UnitSpecific[unit](self)
 	end
@@ -916,14 +896,18 @@ end
 
 oUF:RegisterStyle('alekk', Shared)
 
-oUF:Factory(function(self) -- the new 'where stuff goes method
+oUF:Factory(function(self)
 	oUF:SetActiveStyle('alekk')
 
 	oUF:Spawn('player'):SetPoint('CENTER', -305, -92)
 	oUF:Spawn('target'):SetPoint('CENTER', 305, -92)
 	oUF:Spawn('pet'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -45)
 	oUF:Spawn('targettarget'):SetPoint('TOPRIGHT', oUF.units.target, 'BOTTOMRIGHT', 0, -1)
-	oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -1)
+	if select(2, UnitClass('player')) == 'DRUID' then
+		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -20)
+	else
+		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -1)
+	end
 	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF.units.focus, 'TOPRIGHT', 5, 0)
 	
 	 -- Maintank Frames
