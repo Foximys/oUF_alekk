@@ -199,18 +199,7 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	button.count:SetJustifyH('RIGHT')
 	button.count:SetFont(fontn, 14, 'OUTLINE')
 	button.count:SetTextColor(0.8, 0.8, 0.8)
-	
-	button.backdrop = CreateFrame('Frame', nil, button)
-	button.backdrop:SetPoint('TOPLEFT', button, 'TOPLEFT', -3.5, 3)
-	button.backdrop:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 4, -3.5)
-	button.backdrop:SetFrameStrata('BACKGROUND')
-	button.backdrop:SetBackdrop {
-		edgeFile = glowTex, edgeSize = 5,
-		insets = {left = 3, right = 3, top = 3, bottom = 3}
-	}
-	button.backdrop:SetBackdropColor(0, 0, 0, 0)
-	button.backdrop:SetBackdropBorderColor(0, 0, 0)
-	
+
 	button.overlay:SetTexture(textureborder)
 	button.overlay:SetPoint('TOPLEFT', button, 'TOPLEFT', -1, 1)
 	button.overlay:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 1, -1)
@@ -231,44 +220,45 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	--]]
 end
 
-local PostUpdateIcon = function(element, unit, button, index)
-	local _, _, _, _, type, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, filter)
-	local color = DebuffTypeColor[type] or DebuffTypeColor.none
+local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDebuff)
+	local name, _, _, _, dtype, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
+	local color = DebuffTypeColor[dtype] or DebuffTypeColor.none
 
 	if (unitCaster == 'player' or unitCaster == 'pet' or unitCaster == 'vehicle') then
-		if button.debuff then
-			button.overlay:SetVertexColor(0.8, 0.2, 0.2)
+		if icon.debuff then
+			--icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
+			icon.overlay:SetVertexColor(color.r * 3/5, color.g * 3/5, color.b * 3/5)
 		else
-			button.overlay:SetVertexColor(0.2, 0.8, 0.2)
+			icon.overlay:SetVertexColor(0.2, 0.8, 0.2)
 		end
 	else
 		if UnitIsEnemy('player', unit) then
-			if button.debuff then
-				button.icon:SetDesaturated(true)
+			if icon.debuff then
+				icon.icon:SetDesaturated(true)
 			end
 		end
-		button.overlay:SetVertexColor(0.5, 0.5, 0.5)
+		icon.overlay:SetVertexColor(0.5, 0.5, 0.5)
 	end
 	
 	if unit == 'player' then
-		button.time:SetFont(fontn, 17, 'OUTLINE')
-		button.count:SetFont(fontn, 17, 'OUTLINE')
+		icon.time:SetFont(fontn, 17, 'OUTLINE')
+		icon.count:SetFont(fontn, 17, 'OUTLINE')
 	else
-		button.time:SetFont(fontn, 14, 'OUTLINE')	
-		button.count:SetFont(fontn, 14, 'OUTLINE')
+		icon.time:SetFont(fontn, 14, 'OUTLINE')	
+		icon.count:SetFont(fontn, 14, 'OUTLINE')
 	end
 
-	button.overlay:SetTexture(textureborder)
-	button.overlay:SetPoint('TOPLEFT', button, 'TOPLEFT', -1, 1)
-	button.overlay:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 1, -1)
-	button.overlay:SetTexCoord(0, 1, 0, 1)
-	button.icon:SetTexCoord(.07, .93, .07, .93)
-	--button.overlay.Hide = function() end
+	icon.overlay:SetTexture(textureborder)
+	icon.overlay:SetPoint('TOPLEFT', icon, 'TOPLEFT', -1, 1)
+	icon.overlay:SetPoint('BOTTOMRIGHT', icon, 'BOTTOMRIGHT', 1, -1)
+	icon.overlay:SetTexCoord(0, 1, 0, 1)
+	icon.icon:SetTexCoord(.07, .93, .07, .93)
+	--icon.overlay.Hide = function() end
 	
-	button.duration = duration
-	button.timeLeft = expirationTime
-	button.first = true
-	button:SetScript('OnUpdate', CreateAuraTimer)
+	icon.duration = duration
+	icon.timeLeft = expirationTime
+	icon.first = true
+	icon:SetScript('OnUpdate', CreateAuraTimer)
 end
 
 local menu = function(self)
@@ -554,8 +544,25 @@ local UnitSpecific = {
 			self.EclipseBar.SolarBar:SetSize(266, 13)
 			self.EclipseBar.SolarBar:SetStatusBarTexture(texturebar)
 			self.EclipseBar.SolarBar:SetStatusBarColor(0.95, 0.73, 0.15)
+			
+			self.EclipseBar.Glow = self.EclipseBar:CreateTexture(nil, 'OVERLAY')
+			self.EclipseBar.Glow:SetTexture[[Interface\CastingBar\UI-CastingBar-Spark]]
+			self.EclipseBar.Glow:SetBlendMode('Add')
+			self.EclipseBar.Glow:SetHeight(24)
+			self.EclipseBar.Glow:SetWidth(25)
+			self.EclipseBar.Glow:SetVertexColor(.69,.31,.31)
+						
+			self.EclipseBar.Text = setFontString(self.EclipseBar.SolarBar, fontn, 13)
+			self.EclipseBar.Text:SetPoint('CENTER', self.EclipseBar, 'CENTER', 0, 0)
+			self:Tag(self.EclipseBar.Text, '[pereclipse]%')
 		end
-
+		--[[
+		if UnitAffectingCombat('player') then
+			self.EclipseBar:Show()
+		else
+			self.EclipseBar:Hide()
+		end
+		--]]
 	end,
 	
 	target = function(self)
