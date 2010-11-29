@@ -189,10 +189,21 @@ local CreateAuraTimer = function(self,elapsed)
 end
 
 local PostCreateIcon = function(self, button, icons, index, debuff)
-	self.showDebuffType = true
+	--self.showDebuffType = true
 	self.disableCooldown = true
 	button.cd.noOCC = true
 	button.cd.noCooldownCount = false
+	
+	button.backdrop = CreateFrame("Frame", nil, button)
+	button.backdrop:SetPoint("TOPLEFT", button, "TOPLEFT", -3.5, 3)
+	button.backdrop:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 4, -3.5)
+	button.backdrop:SetFrameStrata("BACKGROUND")
+	button.backdrop:SetBackdrop {
+		edgeFile = glowTex, edgeSize = 5,
+		insets = {left = 3, right = 3, top = 3, bottom = 3}
+	}
+	button.backdrop:SetBackdropColor(0, 0, 0, 0)
+	button.backdrop:SetBackdropBorderColor(0, 0, 0)
 	
 	button.count:ClearAllPoints()
 	button.count:SetPoint('BOTTOMRIGHT', 3,-3)
@@ -205,7 +216,7 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	button.overlay:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 1, -1)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
 	button.icon:SetTexCoord(.07, .93, .07, .93)
-	button.overlay.Hide = function(self) self:SetVertexColor(0.4, 0.4, 0.4) end
+	button.overlay.Hide = function(self) end
 	
 	button.time = button:CreateFontString(nil, 'OVERLAY')
 	button.time:SetPoint('CENTER', button)
@@ -222,12 +233,10 @@ end
 
 local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDebuff)
 	local name, _, _, _, dtype, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
-	local color = DebuffTypeColor[dtype] or DebuffTypeColor.none
 
-	if (unitCaster == 'player' or unitCaster == 'pet' or unitCaster == 'vehicle') then
+	if (unitCaster == 'player' or unitCaster == 'pet' or unitCaster == 'vehicle') and unit == "target" then
 		if icon.debuff then
-			--icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
-			icon.overlay:SetVertexColor(color.r * 3/5, color.g * 3/5, color.b * 3/5)
+			icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
 		else
 			icon.overlay:SetVertexColor(0.2, 0.8, 0.2)
 		end
