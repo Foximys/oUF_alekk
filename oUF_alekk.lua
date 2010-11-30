@@ -223,12 +223,10 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	button.time:SetJustifyH('CENTER')
 	button.time:SetFont(fontn, 14, 'OUTLINE')	
 		
-	--[[
-	if icons == self.Enchant then
-		button.remaining:SetFont(fontn, 15, 'OUTLINE')
+	if (self.Enchant) then
+		button.time:SetFont(fontn, 15, 'OUTLINE')
 		button.overlay:SetVertexColor(0.33, 0.59, 0.33)
 	end
-	--]]
 end
 
 local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDebuff)
@@ -257,13 +255,6 @@ local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDe
 		icon.count:SetFont(fontn, 14, 'OUTLINE')
 	end
 
-	icon.overlay:SetTexture(textureborder)
-	icon.overlay:SetPoint('TOPLEFT', icon, 'TOPLEFT', -1, 1)
-	icon.overlay:SetPoint('BOTTOMRIGHT', icon, 'BOTTOMRIGHT', 1, -1)
-	icon.overlay:SetTexCoord(0, 1, 0, 1)
-	icon.icon:SetTexCoord(.07, .93, .07, .93)
-	--icon.overlay.Hide = function() end
-	
 	icon.duration = duration
 	icon.timeLeft = expirationTime
 	icon.first = true
@@ -283,16 +274,26 @@ end
 
 local CreateEnchantTimer = function(self, icons)
 	for i = 1, 2 do
-		local icon = icons[i]
-		if icon.expTime then
-			icon.timeLeft = icon.expTime - GetTime()
-			icon.remaining:Show()
+		local button = icons[i]
+		if button.expTime then
+			button.timeLeft = icon.expTime - GetTime()
+			button.time:Show()
 		else
-			icon.remaining:Hide()
+			button.time:Hide()
 		end
-		icon:SetScript('OnUpdate', CreateAuraTimer)
+		button:SetScript('OnUpdate', CreateAuraTimer)
 	end
 end
+
+local UpdateClassification = function(self)
+	local class = UnitClassification(self.unit)
+	if (class == 'elite' or class == 'rareelite' or class == 'worldboss') then
+		self:SetBackdropBorderColor(1,0.84,0,1)
+	else
+		self:SetBackdropBorderColor(1,1,1,1)
+	end
+end
+
 
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
@@ -670,6 +671,10 @@ local UnitSpecific = {
 			self.Castbar.Spark:SetWidth(25)
 			self.Castbar.Spark:SetVertexColor(.69,.31,.31)
 		end
+		
+		table.insert(self.__elements, UpdateClassification)
+		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
+		
 	end,
 	
 	targettarget = function(self)
@@ -690,6 +695,9 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
 		self:Tag(self.Health.value, '[perhp]%')
+		
+		table.insert(self.__elements, UpdateClassification)
+		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
 	end,
 	
 	focus = function(self)
@@ -743,6 +751,9 @@ local UnitSpecific = {
 			self.Castbar.Spark:SetVertexColor(.69,.31,.31)
 		end
 		
+		table.insert(self.__elements, UpdateClassification)
+		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
+		
 	end,
 	
 	focustarget = function(self)
@@ -763,6 +774,9 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetPoint('RIGHT', self.Health, 'RIGHT', -3, 0)
 		self:Tag(self.Health.value, '[perhp]%')
+		
+		table.insert(self.__elements, UpdateClassification)
+		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
 	end,
 	
 	pet = function(self)
@@ -818,6 +832,7 @@ local UnitSpecific = {
 		self:Tag(self.Health.value, '[perhp]%')
 	end,
 
+	
 }
 
 local function Shared(self, unit)
@@ -833,12 +848,6 @@ local function Shared(self, unit)
 	self:SetHeight(38)
 	--self:SetScale(0.85)
 	
-	if (UnitClassification(unit)== 'worldboss' or UnitClassification(unit)== 'rareelite' or UnitClassification(unit)== 'elite') then
-		self:SetBackdropBorderColor(1,0.84,0,1)
-	else
-		self:SetBackdropBorderColor(1,1,1,1)
-	end	
-		
 	self.Health = CreateFrame('StatusBar', nil, self)
 	self.Health:SetStatusBarTexture(texturebar)
 	self.Health:SetStatusBarColor(.31, .31, .31)
@@ -883,20 +892,16 @@ local function Shared(self, unit)
 	self.PostCreateEnchantIcon = PostCreateIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 	
-	if(not unit) then 
-		self.SpellRange = true
-		self.Range = {
+	self.Range = {
 			insideAlpha = 1,
 			outsideAlpha = 0.8,
-		}
-	end
+			}
 	
 	self.MoveableFrames = true
 	
 	if(UnitSpecific[unit]) then
 		return UnitSpecific[unit](self)
 	end
-
 end
 
   -----------------------------
