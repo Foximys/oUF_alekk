@@ -90,11 +90,7 @@ oUF.Tags['alekk:smarthp'] = function(unit) -- gives Dead Ghost or HP | max HP | 
 	if(status) then
 		return status
 	elseif (unit == 'target') then
-		if UnitCanAttack('player', unit) then
-			return format('|cff0090ff%.1f%% | %s|r', (min/max*100),kilo(max))
-		else
-			return format('%.1f%% | %s', (min/max*100),kilo(max))
-		end 
+		return format('%.1f%% | %s', (min/max*100),kilo(max))
 	else
 		return format('%d | %d | %d%%',min , max ,floor(min/max*100))
 	end
@@ -360,8 +356,8 @@ local UnitSpecific = {
 		self:Tag(self.Info, '[difficulty][smartlevel] [raidcolor][smartclass] |r[race]')
 		
 		if (tBuffs) then
-			BuffFrame:Hide()
-			TemporaryEnchantFrame:Hide()
+			--BuffFrame:Hide()
+			--TemporaryEnchantFrame:Hide()
 			
 			self.Debuffs = CreateFrame('Frame', nil, self)
 			self.Debuffs:SetHeight(41*4)
@@ -925,7 +921,7 @@ oUF:Factory(function(self)
 	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF.units.focus, 'TOPRIGHT', 5, 0)
 	
 	 -- Maintank Frames
-	local maintank = oUF:SpawnHeader('oUF_MainTank', nil, 'raid, party, solo',
+	local maintank = oUF:SpawnHeader('oUF_MainTank', nil, 'raid',
 		'showRaid', true,
 		'yOffset', -3,
 		'point', 'LEFT',
@@ -937,9 +933,10 @@ oUF:Factory(function(self)
 			self:SetHeight(%d)
 			]]):format(125, 38, mscale))
 	maintank:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 8, 225)
+	
 	-- Maintank Targets
 	local mtt = oUF:SpawnHeader(
-		nil, nil, 'raid,party',
+		nil, nil, 'raid',
 		'showRaid', true,
 		'groupFilter', 'MAINTANK',
 		'oUF-initialConfigFunction', ([[
@@ -950,16 +947,15 @@ oUF:Factory(function(self)
 	mtt:SetPoint('BOTTOMLEFT', maintank, 'BOTTOMRIGHT')
 	-- party
 	if tParty then
-		local party = oUF:SpawnHeader('oUF_Party', nil, 'custom  [group:party,nogroup:raid][@raid6,noexists,group:raid] show;hide',
+		local party = oUF:SpawnHeader('oUF_Party', nil, 'party',
 			'showParty', true, 
-			'showPlayer', true,
 			'sortMethod', 'NAME',
 			'yOffset', -3,
 			'oUF-initialConfigFunction', ([[
 				self:SetWidth(%d)
 				self:SetHeight(%d)
 				]]):format(125, 38, mscale))
-		party:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 8, 180)
+		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
 	end
 
 end)
