@@ -4,7 +4,7 @@
 ## Title: oUF alekk
 ## Notes: oUF layout
 ## RequiredDeps: oUF
-## OptionalDeps: oUF_Smooth, oUF_AuraSort, oUF_WeaponEnchant
+## OptionalDeps: oUF_Smooth, oUF_AuraSort, oUF_WeaponEnchant, oUF_MovableFrames
 
 oUF_alekk.lua
 

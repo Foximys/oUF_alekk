@@ -185,11 +185,6 @@ local CreateAuraTimer = function(self,elapsed)
 end
 
 local PostCreateIcon = function(self, button, icons, index, debuff)
-	--self.showDebuffType = true
-	self.disableCooldown = true
-	button.cd.noOCC = true
-	button.cd.noCooldownCount = false
-	
 	button.backdrop = CreateFrame("Frame", nil, button)
 	button.backdrop:SetPoint("TOPLEFT", button, "TOPLEFT", -3.5, 3)
 	button.backdrop:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 4, -3.5)
@@ -200,29 +195,36 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	}
 	button.backdrop:SetBackdropColor(0, 0, 0, 0)
 	button.backdrop:SetBackdropBorderColor(0, 0, 0)
-	
-	button.count:ClearAllPoints()
-	button.count:SetPoint('BOTTOMRIGHT', 3,-3)
-	button.count:SetJustifyH('RIGHT')
-	button.count:SetFont(fontn, 14, 'OUTLINE')
+
+	button.count:SetPoint("BOTTOMRIGHT", 3,-3)
+	button.count:SetJustifyH("RIGHT")
+	if self.unit == "player" then
+		button.count:SetFont(fontn, 17, "OUTLINE")
+	else
+		button.count:SetFont(fontn, 14, "OUTLINE")
+	end
 	button.count:SetTextColor(0.8, 0.8, 0.8)
 
+	button.cd.noOCC = true
+	button.cd.noCooldownCount = true
+	self.disableCooldown = true
+
 	button.overlay:SetTexture(textureborder)
-	button.overlay:SetPoint('TOPLEFT', button, 'TOPLEFT', -1, 1)
-	button.overlay:SetPoint('BOTTOMRIGHT', button, 'BOTTOMRIGHT', 1, -1)
+	button.overlay:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
+	button.overlay:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
-	button.icon:SetTexCoord(.07, .93, .07, .93)
 	button.overlay.Hide = function(self) end
-	
-	button.time = button:CreateFontString(nil, 'OVERLAY')
-	button.time:SetPoint('CENTER', button)
-	button.time:SetJustifyH('CENTER')
-	button.time:SetFont(fontn, 14, 'OUTLINE')	
-		
-	if (self.Enchant) then
-		button.time:SetFont(fontn, 15, 'OUTLINE')
+
+	button.time = setFontString(button, fontn, 12)
+		button.time:SetFont(fontn, 14, "OUTLINE")
+		if self.unit == "player" then
+			button.time:SetFont(fontn, 17, "OUTLINE")
+		end
+	if icons == self.Enchant then
+		button.time:SetFont(fontn, 15, "OUTLINE")
 		button.overlay:SetVertexColor(0.33, 0.59, 0.33)
 	end
+	button.time:SetPoint("CENTER", 1, -1)
 end
 
 local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDebuff)
@@ -272,7 +274,7 @@ local CreateEnchantTimer = function(self, icons)
 	for i = 1, 2 do
 		local button = icons[i]
 		if button.expTime then
-			button.timeLeft = icon.expTime - GetTime()
+			button.timeLeft = button.expTime - GetTime()
 			button.time:Show()
 		else
 			button.time:Hide()
@@ -356,8 +358,8 @@ local UnitSpecific = {
 		self:Tag(self.Info, '[difficulty][smartlevel] [raidcolor][smartclass] |r[race]')
 		
 		if (tBuffs) then
-			--BuffFrame:Hide()
-			--TemporaryEnchantFrame:Hide()
+			BuffFrame:Hide()
+			TemporaryEnchantFrame:Hide()
 			
 			self.Debuffs = CreateFrame('Frame', nil, self)
 			self.Debuffs:SetHeight(41*4)
@@ -667,10 +669,6 @@ local UnitSpecific = {
 			self.Castbar.Spark:SetWidth(25)
 			self.Castbar.Spark:SetVertexColor(.69,.31,.31)
 		end
-		
-		table.insert(self.__elements, UpdateClassification)
-		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
-		
 	end,
 	
 	targettarget = function(self)
@@ -691,9 +689,6 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
 		self:Tag(self.Health.value, '[perhp]%')
-		
-		table.insert(self.__elements, UpdateClassification)
-		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
 	end,
 	
 	focus = function(self)
@@ -746,10 +741,6 @@ local UnitSpecific = {
 			self.Castbar.Spark:SetWidth(25)
 			self.Castbar.Spark:SetVertexColor(.69,.31,.31)
 		end
-		
-		table.insert(self.__elements, UpdateClassification)
-		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
-		
 	end,
 	
 	focustarget = function(self)
@@ -770,9 +761,6 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetPoint('RIGHT', self.Health, 'RIGHT', -3, 0)
 		self:Tag(self.Health.value, '[perhp]%')
-		
-		table.insert(self.__elements, UpdateClassification)
-		self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
 	end,
 	
 	pet = function(self)
@@ -826,10 +814,84 @@ local UnitSpecific = {
 		self.Health.value = setFontString(self.Health, fontn, 13)
 		self.Health.value:SetPoint('RIGHT', self.Health, 'RIGHT', -3, 0)
 		self:Tag(self.Health.value, '[perhp]%')
-	end,
-
-	
+	end,	
 }
+
+local function Raidering(self, unit)
+	self:RegisterForClicks('AnyDown')
+	self:SetScript('OnEnter', UnitFrame_OnEnter)
+	self:SetScript('OnLeave', UnitFrame_OnLeave)
+	self.menu = menu
+
+	self:SetBackdrop(backdrop)
+	self:SetBackdropColor(0 ,0 ,0 ,1)
+	
+	self:SetWidth(125)
+	self:SetHeight(30)
+	--self:SetScale(0.85)
+	
+	self.Health = CreateFrame('StatusBar', nil, self)
+	self.Health:SetStatusBarTexture(texturebar)
+	self.Health:SetStatusBarColor(.31, .31, .31)
+	self.Health:SetPoint('LEFT', 4.5, 0)
+	self.Health:SetPoint('RIGHT', -4.5, 0)
+	self.Health:SetPoint('TOP', 0, -4.5)
+	self.Health:SetHeight(17)
+	self.Health.colorClass = true
+	self.Health.colorReaction = true
+	self.Health.colorHappiness = true
+	self.Health.colorTapping = true
+	self.Health.colorDisconnected = true
+	self.Health.frequentUpdates = true
+
+	self.Health.bg = self.Health:CreateTexture(nil, 'BACKGROUND')
+	self.Health.bg:SetAllPoints(self.Health)
+	self.Health.bg:SetTexture(texturebar)
+	self.Health.bg.multiplier = .30
+	
+	self.Name = setFontString(self.Health, fontn, 13)
+	self.Name:SetPoint('LEFT', self.Health, 'LEFT',2,0)
+	self.Name:SetWidth(70)
+	self.Name:SetHeight(17)
+	self.Name:SetJustifyH('LEFT')
+	self:Tag(self.Name, '[name]')
+	
+	self.Health.value = setFontString(self.Health, fontn, 13)
+	self.Health.value:SetPoint('RIGHT', self.Health, 'RIGHT', -3, 0)
+	self:Tag(self.Health.value, '[perhp]%')
+
+	self.Power = CreateFrame('StatusBar', nil, self)
+	self.Power:SetHeight(4)
+	self.Power:SetStatusBarTexture(texturebar)
+	self.Power:SetStatusBarColor(.25, .25, .35)
+	
+	self.Power:SetPoint('LEFT', self.Health)
+	self.Power:SetPoint('RIGHT', self.Health)
+	self.Power:SetPoint('TOP', self.Health, 'BOTTOM', 0, -1)
+	self.Power.colorPower = true
+	self.Power.frequentUpdates = true
+
+	self.Power.bg = self.Power:CreateTexture(nil, 'BACKGROUND')
+	self.Power.bg:SetAllPoints(self.Power)
+	self.Power.bg:SetTexture(texturebar)
+	self.Power.bg.multiplier = .30
+	
+	self.RaidIcon = self.Health:CreateTexture(nil, 'OVERLAY')
+	self.RaidIcon:SetHeight(13)
+	self.RaidIcon:SetWidth(13)
+	self.RaidIcon:SetPoint('TOP', self, 0, 5)
+	self.RaidIcon:SetTexture('Interface\\TargetingFrame\\UI-RaidTargetingIcons')
+
+	self.Range = {
+			insideAlpha = 1,
+			outsideAlpha = 0.8,
+			}
+	
+	self.MoveableFrames = true
+		
+	table.insert(self.__elements, UpdateClassification)
+	self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
+end
 
 local function Shared(self, unit)
 	
@@ -849,7 +911,7 @@ local function Shared(self, unit)
 	self.Health:SetStatusBarColor(.31, .31, .31)
 	self.Health:SetPoint('LEFT', 4.5,0)
 	self.Health:SetPoint('RIGHT', -4.5,0)
-	self.Health:SetPoint('TOP', 0,-4.5)
+	self.Health:SetPoint('TOP', 0, -4.5)
 	self.Health:SetHeight(23)
 	self.Health.colorClass = true
 	self.Health.colorReaction = true
@@ -895,6 +957,9 @@ local function Shared(self, unit)
 	
 	self.MoveableFrames = true
 	
+	table.insert(self.__elements, UpdateClassification)
+	self:RegisterEvent('UNIT_CLASSIFICATION_CHANGED', UpdateClassification)
+	
 	if(UnitSpecific[unit]) then
 		return UnitSpecific[unit](self)
 	end
@@ -905,6 +970,7 @@ end
   -----------------------------
 
 oUF:RegisterStyle('alekk', Shared)
+oUF:RegisterStyle('alekk_maintank', Raidering)
 
 oUF:Factory(function(self)
 	oUF:SetActiveStyle('alekk')
@@ -919,32 +985,43 @@ oUF:Factory(function(self)
 		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -1)
 	end
 	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF.units.focus, 'TOPRIGHT', 5, 0)
-	
-	 -- Maintank Frames
+		
+	-- Maintank Frames
+	oUF:SetActiveStyle('alekk_maintank')	
 	local maintank = oUF:SpawnHeader('oUF_MainTank', nil, 'raid',
 		'showRaid', true,
+		'xOffset', 5,
 		'yOffset', -3,
-		'point', 'LEFT',
-		'columnAnchorPoint', 'TOP',
+		'maxColumns', 1,
+		'unitsPerColumn', 5,
+		'columnSpacing', 2,
+		'point', 'TOP',
+		'columnAnchorPoint', 'BOTTOM',
 		'sortMethod', 'NAME',
 		'groupFilter', 'MAINTANK',
 		'oUF-initialConfigFunction', ([[
 			self:SetWidth(%d)
 			self:SetHeight(%d)
 			]]):format(125, 38, mscale))
-	maintank:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 8, 225)
+	maintank:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 8, 255)
 	
 	-- Maintank Targets
 	local mtt = oUF:SpawnHeader(
 		nil, nil, 'raid',
 		'showRaid', true,
+		'xOffset', 5,
+		'yOffset', -3,
+		'maxColumns', 1,
+		'unitsPerColumn', 5,
+		'columnSpacing', 2,
 		'groupFilter', 'MAINTANK',
 		'oUF-initialConfigFunction', ([[
 			self:SetWidth(%d)
 			self:SetHeight(%d)
 			self:SetAttribute('unitsuffix', 'target')
 			]]):format(125, 38, mscale))
-	mtt:SetPoint('BOTTOMLEFT', maintank, 'BOTTOMRIGHT')
+	mtt:SetPoint('TOPLEFT', maintank, 'TOPRIGHT', 5, 0)
+	
 	-- party
 	if tParty then
 		local party = oUF:SpawnHeader('oUF_Party', nil, 'party',
@@ -955,7 +1032,7 @@ oUF:Factory(function(self)
 				self:SetWidth(%d)
 				self:SetHeight(%d)
 				]]):format(125, 38, mscale))
-		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
+		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 255)
 	end
 
 end)
