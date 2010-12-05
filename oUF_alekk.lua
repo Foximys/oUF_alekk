@@ -165,18 +165,18 @@ local CreateAuraTimer = function(self,elapsed)
 			end
 			if self.timeLeft > 60 then
 				local time = FormatTime(self.timeLeft)
-				self.time:SetText(time)
-				self.time:SetTextColor(0.8, 0.8, 0.9)
+				self.remaining:SetText(time)
+				self.remaining:SetTextColor(0.8, 0.8, 0.9)
 			elseif self.timeLeft > 5 then
 				local time = FormatTime(self.timeLeft)
-				self.time:SetText(time)
-				self.time:SetTextColor(0.8, 0.8, 0.2)
+				self.remaining:SetText(time)
+				self.remaining:SetTextColor(0.8, 0.8, 0.2)
 			elseif self.timeLeft > 0 then
 				local time = FormatTime(self.timeLeft)
-				self.time:SetText(time)
-				self.time:SetTextColor(0.9, 0.3, 0.3)
+				self.remaining:SetText(time)
+				self.remaining:SetTextColor(0.9, 0.3, 0.3)
 			else
-				self.time:Hide()
+				self.remaining:Hide()
 				self:SetScript('OnUpdate', nil)
 			end
 			self.elapsed = 0
@@ -195,15 +195,17 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	}
 	button.backdrop:SetBackdropColor(0, 0, 0, 0)
 	button.backdrop:SetBackdropBorderColor(0, 0, 0)
-
+	
+	button.count:ClearAllPoints()
 	button.count:SetPoint("BOTTOMRIGHT", 3,-3)
 	button.count:SetJustifyH("RIGHT")
+	button.count:SetTextColor(0.8, 0.8, 0.8)	
 	if self.unit == "player" then
 		button.count:SetFont(fontn, 17, "OUTLINE")
 	else
 		button.count:SetFont(fontn, 14, "OUTLINE")
 	end
-	button.count:SetTextColor(0.8, 0.8, 0.8)
+	
 
 	button.cd.noOCC = true
 	button.cd.noCooldownCount = true
@@ -213,43 +215,46 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	button.overlay:SetPoint("TOPLEFT", button, "TOPLEFT", -1, 1)
 	button.overlay:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, -1)
 	button.overlay:SetTexCoord(0, 1, 0, 1)
+	button.icon:SetTexCoord(.07, .93, .07, .93)
 	button.overlay.Hide = function(self) end
+	
+	button.remaining = button:CreateFontString(nil, 'OVERLAY')
+	button.remaining:SetPoint('CENTER', button)
+	button.remaining:SetJustifyH('CENTER')
+	button.remaining:SetFont(fontn, 14, 'OUTLINE')	
 
-	button.time = setFontString(button, fontn, 12)
-		button.time:SetFont(fontn, 14, "OUTLINE")
-		if self.unit == "player" then
-			button.time:SetFont(fontn, 17, "OUTLINE")
-		end
+	if self.unit == "player" then
+		button.remaining:SetFont(fontn, 17, "OUTLINE")
+	end
+	
 	if icons == self.Enchant then
-		button.time:SetFont(fontn, 15, "OUTLINE")
+		button.remaining:SetFont(fontn, 15, "OUTLINE")
 		button.overlay:SetVertexColor(0.33, 0.59, 0.33)
 	end
-	button.time:SetPoint("CENTER", 1, -1)
 end
 
 local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDebuff)
 	local name, _, _, _, dtype, duration, expirationTime, unitCaster, _ = UnitAura(unit, index, icon.filter)
 
-	if (unitCaster == 'player' or unitCaster == 'pet' or unitCaster == 'vehicle') and unit == "target" then
-		if icon.debuff then
-			icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
-		else
+	if icon.debuff and not UnitIsEnemy('player', unit) then
+		icon.overlay:SetVertexColor(0.8, 0.2, 0.2)
+	elseif (unitCaster == 'player' or unitCaster == 'pet' or unitCaster == 'vehicle') then
+		if unit == 'target' then
 			icon.overlay:SetVertexColor(0.2, 0.8, 0.2)
+		else
+			icon.overlay:SetVertexColor(.5, .5, .5)
 		end
+	elseif UnitIsEnemy('player', unit) and icon.debuff then
+		icon.icon:SetDesaturated(true)
 	else
-		if UnitIsEnemy('player', unit) then
-			if icon.debuff then
-				icon.icon:SetDesaturated(true)
-			end
-		end
-		icon.overlay:SetVertexColor(0.5, 0.5, 0.5)
+		icon.overlay:SetVertexColor(.5, .5, .5)
 	end
 	
 	if unit == 'player' then
-		icon.time:SetFont(fontn, 17, 'OUTLINE')
+		icon.remaining:SetFont(fontn, 17, 'OUTLINE')
 		icon.count:SetFont(fontn, 17, 'OUTLINE')
 	else
-		icon.time:SetFont(fontn, 14, 'OUTLINE')	
+		icon.remaining:SetFont(fontn, 14, 'OUTLINE')	
 		icon.count:SetFont(fontn, 14, 'OUTLINE')
 	end
 
@@ -275,9 +280,9 @@ local CreateEnchantTimer = function(self, icons)
 		local button = icons[i]
 		if button.expTime then
 			button.timeLeft = button.expTime - GetTime()
-			button.time:Show()
+			button.remaining:Show()
 		else
-			button.time:Hide()
+			button.remaining:Hide()
 		end
 		button:SetScript('OnUpdate', CreateAuraTimer)
 	end
@@ -291,7 +296,6 @@ local UpdateClassification = function(self)
 		self:SetBackdropBorderColor(1,1,1,1)
 	end
 end
-
 
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
@@ -949,7 +953,7 @@ local function Shared(self, unit)
 
 	self.PostCreateEnchantIcon = PostCreateIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
-	
+
 	self.Range = {
 			insideAlpha = 1,
 			outsideAlpha = 0.8,
@@ -1014,6 +1018,9 @@ oUF:Factory(function(self)
 		'maxColumns', 1,
 		'unitsPerColumn', 5,
 		'columnSpacing', 2,
+		'point', 'TOP',
+		'columnAnchorPoint', 'BOTTOM',
+		'sortMethod', 'NAME',
 		'groupFilter', 'MAINTANK',
 		'oUF-initialConfigFunction', ([[
 			self:SetWidth(%d)
