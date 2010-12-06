@@ -139,21 +139,21 @@ end
 local FormatTime = function(s)
 	local day, hour, minute = 86400, 3600, 60
 	if s >= day then
-		return format('%dd', floor(s/day + 0.5)), s % day
+		return format("%dd", floor(s/day + 0.5)), s % day
 	elseif s >= hour then
-		return format('%dh', floor(s/hour + 0.5)), s % hour
+		return format("%dh", floor(s/hour + 0.5)), s % hour
 	elseif s >= minute then
 		if s <= minute * 5 then
-			return format('%d:%02d', floor(s/60), s % minute), s - floor(s)
+			return format("%d:%02d", floor(s/60), s % minute), s - floor(s)
 		end
-		return format('%dm', floor(s/minute + 0.5)), s % minute
+		return format("%dm", floor(s/minute + 0.5)), s % minute
 	elseif s >= minute / 12 then
 		return floor(s + 0.5), (s * 100 - floor(s * 100))/100
 	end
-	return format('%.1f', s), (s * 100 - floor(s * 100))/100
+	return format("%.1f", s), (s * 100 - floor(s * 100))/100
 end
 
-local CreateAuraTimer = function(self,elapsed)
+local CreateAuraTimer = function(self, elapsed)
 	if self.timeLeft then
 		self.elapsed = (self.elapsed or 0) + elapsed
 		if self.elapsed >= 0.1 then
@@ -163,21 +163,19 @@ local CreateAuraTimer = function(self,elapsed)
 				self.timeLeft = self.timeLeft - GetTime()
 				self.first = false
 			end
-			if self.timeLeft > 60 then
+			if self.timeLeft > 0 then
 				local time = FormatTime(self.timeLeft)
-				self.remaining:SetText(time)
-				self.remaining:SetTextColor(0.8, 0.8, 0.9)
-			elseif self.timeLeft > 5 then
-				local time = FormatTime(self.timeLeft)
-				self.remaining:SetText(time)
-				self.remaining:SetTextColor(0.8, 0.8, 0.2)
-			elseif self.timeLeft > 0 then
-				local time = FormatTime(self.timeLeft)
-				self.remaining:SetText(time)
-				self.remaining:SetTextColor(0.9, 0.3, 0.3)
+					self.remaining:SetText(time)
+				if self.timeLeft < 5 then
+					self.remaining:SetTextColor(0.9, 0.3, 0.3) -- red
+				elseif 5 < self.timeLeft and self.timeLeft < 60 then
+					self.remaining:SetTextColor(0.8, 0.8, 0.2) -- yellow
+				else
+					self.remaining:SetTextColor(0.8, 0.8, 0.9) -- blueish white
+				end
 			else
 				self.remaining:Hide()
-				self:SetScript('OnUpdate', nil)
+				self:SetScript("OnUpdate", nil)
 			end
 			self.elapsed = 0
 		end
@@ -200,12 +198,12 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	button.count:SetPoint("BOTTOMRIGHT", 3,-3)
 	button.count:SetJustifyH("RIGHT")
 	button.count:SetTextColor(0.8, 0.8, 0.8)	
+	
 	if self.unit == "player" then
 		button.count:SetFont(fontn, 17, "OUTLINE")
 	else
 		button.count:SetFont(fontn, 14, "OUTLINE")
-	end
-	
+	end	
 
 	button.cd.noOCC = true
 	button.cd.noCooldownCount = true
@@ -229,7 +227,7 @@ local PostCreateIcon = function(self, button, icons, index, debuff)
 	
 	if icons == self.Enchant then
 		button.remaining:SetFont(fontn, 15, "OUTLINE")
-		button.overlay:SetVertexColor(0.33, 0.59, 0.33)
+		button.overlay:SetVertexColor(136/255, 57/255, 184/255)
 	end
 end
 
@@ -258,10 +256,17 @@ local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDe
 		icon.count:SetFont(fontn, 14, 'OUTLINE')
 	end
 
-	icon.duration = duration
-	icon.timeLeft = expirationTime
+	if duration and duration > 0 then
+		icon.remaining:Show()
+		icon.timeLeft = expirationTime
+		icon:SetScript("OnUpdate", CreateAuraTimer)
+	else
+		icon.remaining:Hide()
+		icon.timeLeft = math.huge
+		icon:SetScript("OnUpdate", nil)
+	end
+
 	icon.first = true
-	icon:SetScript('OnUpdate', CreateAuraTimer)
 end
 
 local menu = function(self)
@@ -322,6 +327,12 @@ local function OverrideCastbarDelay(self, duration)
 		elseif(self.casting) then
 			self.Time:SetFormattedText('%.1f / %.2f |cffff0000+ %.1f', duration, self.max, self.delay)
 		end	
+end
+
+local updateAllElements = function(frame)
+	for _, v in ipairs(frame.__elements) do
+		v(frame, "UpdateElement", frame.unit)
+	end
 end
 
 -- New style functions.... Painful.
@@ -826,6 +837,8 @@ local function Raidering(self, unit)
 	self:SetScript('OnEnter', UnitFrame_OnEnter)
 	self:SetScript('OnLeave', UnitFrame_OnLeave)
 	self.menu = menu
+	
+	self:HookScript("OnShow", updateAllElements)
 
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0 ,0 ,0 ,1)
@@ -903,6 +916,8 @@ local function Shared(self, unit)
 	self:SetScript('OnEnter', UnitFrame_OnEnter)
 	self:SetScript('OnLeave', UnitFrame_OnLeave)
 	self.menu = menu
+	
+	self:HookScript("OnShow", updateAllElements)
 
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0,0,0,1)
@@ -1007,7 +1022,7 @@ oUF:Factory(function(self)
 			self:SetWidth(%d)
 			self:SetHeight(%d)
 			]]):format(125, 38, mscale))
-	maintank:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 8, 255)
+	maintank:SetPoint('BOTTOMLEFT', UIParent, 'BOTTOMLEFT', 8, 225)
 	
 	-- Maintank Targets
 	local mtt = oUF:SpawnHeader(
@@ -1033,13 +1048,15 @@ oUF:Factory(function(self)
 	if tParty then
 		local party = oUF:SpawnHeader('oUF_Party', nil, 'party',
 			'showParty', true, 
+			'showPlayer', true,
 			'sortMethod', 'NAME',
 			'yOffset', -3,
 			'oUF-initialConfigFunction', ([[
 				self:SetWidth(%d)
 				self:SetHeight(%d)
 				]]):format(125, 38, mscale))
-		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 255)
+		party:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 8, 225)
 	end
+
 
 end)
