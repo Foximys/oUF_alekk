@@ -817,6 +817,9 @@ local UnitSpecific = {
 	end,
 	
 	party = function(self, ...)
+		self:SetWidth(125)
+		self:SetHeight(38)
+		
 		self.Health:SetHeight(23)
 		self.Power:SetHeight(6)
 		
@@ -844,7 +847,7 @@ local function Raidering(self, unit)
 	self:SetBackdropColor(0 ,0 ,0 ,1)
 	
 	self:SetWidth(125)
-	self:SetHeight(30)
+	self:SetHeight(38)
 	--self:SetScale(0.85)
 	
 	self.Health = CreateFrame('StatusBar', nil, self)
@@ -853,7 +856,7 @@ local function Raidering(self, unit)
 	self.Health:SetPoint('LEFT', 4.5, 0)
 	self.Health:SetPoint('RIGHT', -4.5, 0)
 	self.Health:SetPoint('TOP', 0, -4.5)
-	self.Health:SetHeight(17)
+	self.Health:SetHeight(23)
 	self.Health.colorClass = true
 	self.Health.colorReaction = true
 	self.Health.colorHappiness = true
@@ -878,7 +881,7 @@ local function Raidering(self, unit)
 	self:Tag(self.Health.value, '[perhp]%')
 
 	self.Power = CreateFrame('StatusBar', nil, self)
-	self.Power:SetHeight(4)
+	self.Power:SetHeight(6)
 	self.Power:SetStatusBarTexture(texturebar)
 	self.Power:SetStatusBarColor(.25, .25, .35)
 	
