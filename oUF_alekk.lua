@@ -100,6 +100,28 @@ oUF.Tags['alekk:tarpp'] = function(unit) -- gives 4.5k | 4.5k
 	return UnitIsDeadOrGhost(unit) and '' or UnitPower(unit) <= 0 and '' or format('%s | %s', kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
 end
 
+-- these are just for the editor -- I play a priest :P 
+local Shadow_Orb = GetSpellInfo(77487)
+oUF.Tags['alekk:ShadowOrbs'] = function(unit)
+    if(unit == 'player') then
+      local name, _, icon, count = UnitBuff('player', Shadow_Orb)
+	  return name and count
+    end
+end
+oUF.TagEvents['alekk:ShadowOrbs'] = 'UNIT_AURA'
+
+local Evangelism = GetSpellInfo(81661) or GetSpellInfo(81660)
+local Dark_Evangelism = GetSpellInfo(87118) or GetSpellInfo(87117)
+oUF.Tags['alekk:Evangelism'] = function(unit)
+	if unit == 'player' then
+      local name, _, icon, count = UnitBuff('player', Evangelism)
+	  if name then return count end
+	  name, _, icon, count = UnitBuff('player', Dark_Evangelism)
+	  return name and count
+	end
+end
+oUF.TagEvents['alekk:Evangelism'] = 'UNIT_AURA'
+
 local function UpdateRuneBar(self, elapsed)
 	local start, duration, ready = GetRuneCooldown(self:GetID())
 
@@ -398,6 +420,7 @@ local UnitSpecific = {
 			self.Buffs.spacing = 2
 			
 			self.Buffs:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT', -5, -35)
+			--self.Buffs:SetPoint('TOPRIGHT', Minimap, 'TOPLEFT', -5, 10)
 			self.Buffs.initialAnchor = 'TOPRIGHT'
 			self.Buffs['growth-x'] = 'LEFT'
 			self.Buffs['growth-y'] = 'DOWN'
@@ -563,6 +586,12 @@ local UnitSpecific = {
 			self.EclipseBar.Text = setFontString(self.EclipseBar.SolarBar, fontn, 13)
 			self.EclipseBar.Text:SetPoint('CENTER', self.EclipseBar, 'CENTER', 0, 0)
 			self:Tag(self.EclipseBar.Text, '[pereclipse]%')
+		end
+		
+		if select(2, UnitClass('player')) == 'PRIEST' then
+			self.Priestly = setFontString(self.Health, fontn, 20)
+			self.Priestly:SetPoint('BOTTOMRIGHT', self.Health, 'TOPRIGHT', 0, -3)
+			self:Tag(self.Priestly, '[alekk:ShadowOrbs][alekk:Evangelism]')
 		end
 	end,
 	
@@ -968,7 +997,13 @@ local function Shared(self, unit)
 	self.RaidIcon:SetWidth(18)
 	self.RaidIcon:SetPoint('TOP', self, 0, 5)
 	self.RaidIcon:SetTexture('Interface\\TargetingFrame\\UI-RaidTargetingIcons')
-
+	
+	self.Leader = self.Health:CreateTexture(nil, 'OVERLAY')
+	self.Leader:SetHeight(17)
+	self.Leader:SetWidth(17)
+	self.Leader:SetPoint('TOPLEFT', -2, 12)
+	self.Leader:SetTexture('Interface\\GroupFrame\\UI-Group-LeaderIcon')
+	
 	self.PostCreateEnchantIcon = PostCreateIcon
 	self.PostUpdateEnchantIcons = CreateEnchantTimer
 
