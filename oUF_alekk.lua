@@ -756,7 +756,7 @@ local UnitSpecific = {
 		
 		if(tCastbar) then
 			self.Castbar = CreateFrame('StatusBar', nil, self)
-			self.Castbar:SetPoint('TOP', UIParentr, 'CENTER', 0, -123)
+			self.Castbar:SetPoint('TOP', UIParent, 'CENTER', 0, -123)
 			self.Castbar:SetStatusBarTexture(texturebar)
 			self.Castbar:SetStatusBarColor(.79,.41,.31)
 			self.Castbar:SetBackdrop(backdrophp)
