@@ -442,7 +442,7 @@ local UnitSpecific = {
 			local colorcb = oUF.colors.class[classcb]
 
 			self.Castbar = CreateFrame('StatusBar', nil, self)
-			self.Castbar:SetPoint('TOP', UIParentr, 'CENTER', 0, -93)
+			self.Castbar:SetPoint('TOP', UIParent, 'CENTER', 0, -93)
 			self.Castbar:SetStatusBarTexture(texturebar)
 			self.Castbar:SetStatusBarColor(colorcb[1], colorcb[2], colorcb[3])
 			self.Castbar:SetBackdrop(backdrophp)
