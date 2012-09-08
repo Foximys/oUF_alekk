@@ -1,6 +1,6 @@
-## Interface: 40000
+## Interface: 50001
 ## Author: alekk
-## Version: 001
+## Version: 0.2
 ## Title: oUF alekk
 ## Notes: oUF layout
 ## RequiredDeps: oUF
