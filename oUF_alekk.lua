@@ -83,7 +83,7 @@ local kilo = function(value)
 end
 
 -- New tagging system
-oUF.Tags['alekk:smarthp'] = function(unit) -- gives Dead Ghost or HP | max HP | percentage HP
+oUF.Tags.Methods['alekk:smarthp'] = function(unit) -- gives Dead Ghost or HP | max HP | percentage HP
 	local min, max = UnitHealth(unit), UnitHealthMax(unit)
 	local status = not UnitIsConnected(unit) and 'Offline' or UnitIsGhost(unit) and 'Ghost' or UnitIsDead(unit) and 'Dead'
 	
@@ -96,23 +96,23 @@ oUF.Tags['alekk:smarthp'] = function(unit) -- gives Dead Ghost or HP | max HP | 
 	end
 end
 
-oUF.Tags['alekk:tarpp'] = function(unit) -- gives 4.5k | 4.5k
+oUF.Tags.Methods['alekk:tarpp'] = function(unit) -- gives 4.5k | 4.5k
 	return UnitIsDeadOrGhost(unit) and '' or UnitPower(unit) <= 0 and '' or format('%s | %s', kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
 end
 
 -- these are just for the editor -- I play a priest :P 
 local Shadow_Orb = GetSpellInfo(77487)
-oUF.Tags['alekk:ShadowOrbs'] = function(unit)
+oUF.Tags.Methods['alekk:ShadowOrbs'] = function(unit)
     if(unit == 'player') then
       local name, _, icon, count = UnitBuff('player', Shadow_Orb)
 	  return name and count
     end
 end
-oUF.TagEvents['alekk:ShadowOrbs'] = 'UNIT_AURA'
+oUF.Tags.Events['alekk:ShadowOrbs'] = 'UNIT_AURA'
 
 local Evangelism = GetSpellInfo(81661) or GetSpellInfo(81660)
 local Dark_Evangelism = GetSpellInfo(87118) or GetSpellInfo(87117)
-oUF.Tags['alekk:Evangelism'] = function(unit)
+oUF.Tags.Methods['alekk:Evangelism'] = function(unit)
 	if unit == 'player' then
       local name, _, icon, count = UnitBuff('player', Evangelism)
 	  if name then return count end
@@ -120,7 +120,7 @@ oUF.Tags['alekk:Evangelism'] = function(unit)
 	  return name and count
 	end
 end
-oUF.TagEvents['alekk:Evangelism'] = 'UNIT_AURA'
+oUF.Tags.Events['alekk:Evangelism'] = 'UNIT_AURA'
 
 local function UpdateRuneBar(self, elapsed)
 	local start, duration, ready = GetRuneCooldown(self:GetID())
@@ -1034,14 +1034,14 @@ oUF:Factory(function(self)
 
 	oUF:Spawn('player'):SetPoint('CENTER', -305, -92)
 	oUF:Spawn('target'):SetPoint('CENTER', 305, -92)
-	oUF:Spawn('pet'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -45)
-	oUF:Spawn('targettarget'):SetPoint('TOPRIGHT', oUF.units.target, 'BOTTOMRIGHT', 0, -1)
+	oUF:Spawn('pet'):SetPoint('TOPLEFT', oUF_AlekkPlayer, 'BOTTOMLEFT', 0, -45)
+	oUF:Spawn('targettarget'):SetPoint('TOPRIGHT', oUF_AlekkTarget, 'BOTTOMRIGHT', 0, -1)
 	if select(2, UnitClass('player')) == 'DRUID' then
-		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -20)
+		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF_AlekkPlayer, 'BOTTOMLEFT', 0, -20)
 	else
-		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF.units.player, 'BOTTOMLEFT', 0, -1)
+		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF_AlekkPlayer, 'BOTTOMLEFT', 0, -1)
 	end
-	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF.units.focus, 'TOPRIGHT', 5, 0)
+	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF_AlekkFocus, 'TOPRIGHT', 5, 0)
 		
 	-- Maintank Frames
 	oUF:SetActiveStyle('alekk_maintank')	
