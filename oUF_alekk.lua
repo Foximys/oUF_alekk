@@ -522,7 +522,7 @@ local UnitSpecific = {
 		if(select(2, UnitClass('player')) == 'PALADIN') then
 			self.HolyPower = {}
 			
-			for i = 1, MAX_HOLY_POWER do
+			for i = 1, UnitPowerMax('player', SPELL_POWER_HOLY_POWER) do
 				self.HolyPower[i] = self.Health:CreateTexture(nil, 'OVERLAY')
 				self.HolyPower[i]:SetHeight(17)
 				self.HolyPower[i]:SetWidth(17)
