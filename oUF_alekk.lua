@@ -45,6 +45,7 @@ oUF.colors.power.RAGE = {.70,.30,.30}
 oUF.colors.power.FOCUS = {.70,.45,.25}
 oUF.colors.power.ENERGY = {.65,.65,.35}
 oUF.colors.power.RUNIC_POWER = {.45,.45,.75}
+oUF.colors.power.LIGHT_FORCE = {41/255, 209/255, 157/255}
 
 oUF.colors.happiness = {
 	[1] = {.69,.31,.31},
@@ -607,9 +608,9 @@ local UnitSpecific = {
 				else
 					self.Harmony[i]:SetPoint('LEFT', self.Harmony[i-1], 'RIGHT', 1)
 				end	
-				local color = self.colors.power["LIGHT_FORCE"]
+				local color = self.colors.power['LIGHT_FORCE']
 				self.Harmony[i]:SetVertexColor(color[1], color[2], color[3])
-			end			
+			end	
 		end
 	end,
 	
