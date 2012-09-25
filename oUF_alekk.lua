@@ -519,43 +519,7 @@ local UnitSpecific = {
 			self:RegisterEvent('RUNE_REGEN_UPDATE', UpdateRuneType)
 			self:RegisterEvent('RUNE_POWER_UPDATE', UpdateRunePower)
 		end
-		
-		if(select(2, UnitClass('player')) == 'PALADIN') then
-			self.HolyPower = {}
-			
-			for i = 1, UnitPowerMax('player', SPELL_POWER_HOLY_POWER) do
-				self.HolyPower[i] = self.Health:CreateTexture(nil, 'OVERLAY')
-				self.HolyPower[i]:SetHeight(17)
-				self.HolyPower[i]:SetWidth(17)
-				self.HolyPower[i]:SetTexture(bubbleTex)
-				if (i == 1) then
-					self.HolyPower[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
-				else
-					self.HolyPower[i]:SetPoint('LEFT', self.HolyPower[i-1], 'RIGHT', 1)
-				end	
-				local color = self.colors.power["HOLY_POWER"]
-				self.HolyPower[i]:SetVertexColor(color[1], color[2], color[3])
-			end			
-		end
 
-		if(select(2, UnitClass('player')) == 'WARLOCK') then
-			self.SoulShards = {}
-			
-			for i = 1, 3 do
-				self.SoulShards[i] = self.Health:CreateTexture(nil, 'OVERLAY')
-				self.SoulShards[i]:SetHeight(17)
-				self.SoulShards[i]:SetWidth(17)
-				self.SoulShards[i]:SetTexture(bubbleTex)
-				if (i == 1) then
-					self.SoulShards[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
-				else
-					self.SoulShards[i]:SetPoint('LEFT', self.SoulShards[i-1], 'RIGHT', 1)
-				end	
-				local color = self.colors.power["SOUL_SHARDS"]
-				self.SoulShards[i]:SetVertexColor(color[1], color[2], color[3])
-			end
-		end
-		
 		if select(2, UnitClass('player')) == 'DRUID' then
 			self.EclipseBar = CreateFrame('Frame', nil, self)
 			self.EclipseBar:SetSize(275, 20)
@@ -595,19 +559,18 @@ local UnitSpecific = {
 			self:Tag(self.Priestly, '[alekk:ShadowOrbs][alekk:Evangelism]')
 		end
 
-		if select(2, UnitClass('player')) == 'MONK' then
-			self.ClassIcons = {}
-   			for i = 1, 5 do
-     			self.ClassIcons[i] = self.Health:CreateTexture(nil, 'OVERLAY')
-     			self.ClassIcons[i]:SetTexture(bubbleTex)
-      			self.ClassIcons[i]:SetSize(17, 17)
-      			if (i == 1) then
-					self.ClassIcons[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
-				else
-					self.ClassIcons[i]:SetPoint('LEFT', self.ClassIcons[i-1], 'RIGHT', 1)
-				end
-   			end
-		end
+		-- Class Specific Icons (Priest, Warlock, Paladin and Monk)
+		self.ClassIcons = {}
+   		for i = 1, 5 do
+     		self.ClassIcons[i] = self.Health:CreateTexture(nil, 'OVERLAY')
+     		self.ClassIcons[i]:SetTexture(bubbleTex)
+      		self.ClassIcons[i]:SetSize(17, 17)
+      		if (i == 1) then
+				self.ClassIcons[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
+			else
+				self.ClassIcons[i]:SetPoint('LEFT', self.ClassIcons[i-1], 'RIGHT', 1)
+			end
+   		end
 	end,
 	
 	target = function(self)
