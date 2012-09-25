@@ -596,21 +596,17 @@ local UnitSpecific = {
 		end
 
 		if select(2, UnitClass('player')) == 'MONK' then
-			self.Harmony = {}
-
-			for i= 1, UnitPowerMax('player',SPELL_POWER_LIGHT_FORCE) do
-				self.Harmony[i] = self.Health:CreateTexture(nil, 'OVERLAY')
-				self.Harmony[i]:SetHeight(17)
-				self.Harmony[i]:SetWidth(17)
-				self.Harmony[i]:SetTexture(bubbleTex)
-				if (i == 1) then
-					self.Harmony[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
+			self.ClassIcons = {}
+   			for i = 1, 5 do
+     			self.ClassIcons[i] = self.Health:CreateTexture(nil, 'OVERLAY')
+     			self.ClassIcons[i]:SetTexture(bubbleTex)
+      			self.ClassIcons[i]:SetSize(17, 17)
+      			if (i == 1) then
+					self.ClassIcons[i]:SetPoint('LEFT', self.Health, 'LEFT', 2, 0)
 				else
-					self.Harmony[i]:SetPoint('LEFT', self.Harmony[i-1], 'RIGHT', 1)
-				end	
-				local color = self.colors.power['LIGHT_FORCE']
-				self.Harmony[i]:SetVertexColor(color[1], color[2], color[3])
-			end	
+					self.ClassIcons[i]:SetPoint('LEFT', self.ClassIcons[i-1], 'RIGHT', 1)
+				end
+   			end
 		end
 	end,
 	
