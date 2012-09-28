@@ -9,7 +9,7 @@ local texturebar = 'Interface\\AddOns\\oUF_alekk\\textures\\Ruben'
 local trunebar = 'Interface\\AddOns\\oUF_alekk\\textures\\rothTex'
 local textureborder = 'Interface\\AddOns\\oUF_alekk\\textures\\Caith.tga'
 local bubbleTex = 'Interface\\Addons\\oUF_alekk\\textures\\bubbleTex'
-local cbborder = 'Interface\\AddOns\\oUF_alekk\\textures\\border'
+local cbborder = 'Interface\\AddOns\\oUF_alekk\\textures\\iconborder'
 local glowTexture = 'Interface\\AddOns\\oUF_alekk\\textures\\glowTex'
 local mscale = 1
 
@@ -100,28 +100,6 @@ end
 oUF.Tags.Methods['alekk:tarpp'] = function(unit) -- gives 4.5k | 4.5k
 	return UnitIsDeadOrGhost(unit) and '' or UnitPower(unit) <= 0 and '' or format('%s | %s', kilo(UnitPower(unit)), kilo(UnitPowerMax(unit)))
 end
-
--- these are just for the editor -- I play a priest :P 
-local Shadow_Orb = GetSpellInfo(77487)
-oUF.Tags.Methods['alekk:ShadowOrbs'] = function(unit)
-    if(unit == 'player') then
-      local name, _, icon, count = UnitBuff('player', Shadow_Orb)
-	  return name and count
-    end
-end
-oUF.Tags.Events['alekk:ShadowOrbs'] = 'UNIT_AURA'
-
-local Evangelism = GetSpellInfo(81661) or GetSpellInfo(81660)
-local Dark_Evangelism = GetSpellInfo(87118) or GetSpellInfo(87117)
-oUF.Tags.Methods['alekk:Evangelism'] = function(unit)
-	if unit == 'player' then
-      local name, _, icon, count = UnitBuff('player', Evangelism)
-	  if name then return count end
-	  name, _, icon, count = UnitBuff('player', Dark_Evangelism)
-	  return name and count
-	end
-end
-oUF.Tags.Events['alekk:Evangelism'] = 'UNIT_AURA'
 
 local function UpdateRuneBar(self, elapsed)
 	local start, duration, ready = GetRuneCooldown(self:GetID())
@@ -289,6 +267,12 @@ local PostUpdateIcon = function(element, unit, icon, index, offset, filter, isDe
 		icon:SetScript("OnUpdate", nil)
 	end
 
+	-- Right Click Cancel Buff/Debuff
+	icon:SetScript('OnMouseUp', function(self, mouseButton)
+		if mouseButton == 'RightButton' then
+			CancelUnitBuff('player', index)
+	end end)
+
 	icon.first = true
 end
 
@@ -420,8 +404,8 @@ local UnitSpecific = {
 			self.Buffs.size = 35
 			self.Buffs.spacing = 2
 			
-			self.Buffs:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT', -5, -35)
-			--self.Buffs:SetPoint('TOPRIGHT', Minimap, 'TOPLEFT', -5, 10)
+			--self.Buffs:SetPoint('TOPRIGHT', UIParent, 'TOPRIGHT', -5, -35)
+			self.Buffs:SetPoint('TOPRIGHT', Minimap, 'TOPLEFT', -5, 10)
 			self.Buffs.initialAnchor = 'TOPRIGHT'
 			self.Buffs['growth-x'] = 'LEFT'
 			self.Buffs['growth-y'] = 'DOWN'
@@ -553,13 +537,8 @@ local UnitSpecific = {
 			self:Tag(self.EclipseBar.Text, '[pereclipse]%')
 		end
 		
-		if select(2, UnitClass('player')) == 'PRIEST' then
-			self.Priestly = setFontString(self.Health, fontn, 20)
-			self.Priestly:SetPoint('BOTTOMRIGHT', self.Health, 'TOPRIGHT', 0, -3)
-			self:Tag(self.Priestly, '[alekk:ShadowOrbs][alekk:Evangelism]')
-		end
-
 		-- Class Specific Icons (Priest, Warlock, Paladin and Monk)
+		--if select(2, UnitClass('player')) ~= 'PRIEST' or select(2, UnitClass('player')) ~= 'PALADIN' or 
 		self.ClassIcons = {}
    		for i = 1, 5 do
      		self.ClassIcons[i] = self.Health:CreateTexture(nil, 'OVERLAY')
@@ -1012,14 +991,14 @@ oUF:Factory(function(self)
 
 	oUF:Spawn('player'):SetPoint('CENTER', -305, -92)
 	oUF:Spawn('target'):SetPoint('CENTER', 305, -92)
-	oUF:Spawn('pet'):SetPoint('TOPLEFT', oUF_AlekkPlayer, 'BOTTOMLEFT', 0, -45)
-	oUF:Spawn('targettarget'):SetPoint('TOPRIGHT', oUF_AlekkTarget, 'BOTTOMRIGHT', 0, -1)
+	oUF:Spawn('pet'):SetPoint('TOPLEFT', oUF_alekkPlayer, 'BOTTOMLEFT', 0, -45)
+	oUF:Spawn('targettarget'):SetPoint('TOPRIGHT', oUF_alekkTarget, 'BOTTOMRIGHT', 0, -1)
 	if select(2, UnitClass('player')) == 'DRUID' then
-		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF_AlekkPlayer, 'BOTTOMLEFT', 0, -20)
+		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF_alekkPlayer, 'BOTTOMLEFT', 0, -20)
 	else
-		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF_AlekkPlayer, 'BOTTOMLEFT', 0, -1)
+		oUF:Spawn('focus'):SetPoint('TOPLEFT', oUF_alekkPlayer, 'BOTTOMLEFT', 0, -1)
 	end
-	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF_AlekkFocus, 'TOPRIGHT', 5, 0)
+	oUF:Spawn('focustarget'):SetPoint('TOPLEFT', oUF_alekkFocus, 'TOPRIGHT', 5, 0)
 		
 	-- Maintank Frames
 	oUF:SetActiveStyle('alekk_maintank')	
